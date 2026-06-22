@@ -1,6 +1,6 @@
 {
   "name": "tammai-tools",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A collection of workshop and presentation tools by Tam Mai. Includes a skill for generating polished HTML slide decks using the BigIn design system.",
   "author": {
     "name": "Tam Mai",

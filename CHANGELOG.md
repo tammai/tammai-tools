@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-06-22
+
+### Changed
+- Custom preset flow now presents the full Tailwind accent palette (17 colors, 500-shade) and full Tailwind neutral palette (5 scales, 950-shade) via `AskUserQuestion` when collecting accent and background colors
+
 ## [0.2.1] — 2026-06-22
 
 ### Fixed
