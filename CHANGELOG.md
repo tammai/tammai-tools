@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-06-22
+
+### Added
+- `.claude-plugin/marketplace.json` — Claude Cowork marketplace metadata: categories, tags, pricing, icon, license, repository, and homepage
+
 ### Changed
 - Navigator layout changed from vertical (column, 80 px wide) to horizontal (row, 48 px tall, width auto)
 - Navigator chevron icons updated from up/down to left/right to match horizontal orientation

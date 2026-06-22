@@ -12,6 +12,7 @@ There is no build system, package manager, or test suite. All assets are plain f
 
 ```
 .claude-plugin/plugin.json     — plugin metadata (name, version, description)
+.claude-plugin/marketplace.json — Claude Cowork marketplace config (categories, tags, pricing, icon)
 skills/
   workshop-slides/
     SKILL.md                   — the skill's instruction document (Claude reads this at invocation)

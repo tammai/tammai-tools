@@ -33,6 +33,7 @@ Generates a complete, self-contained HTML slide deck from a topic, outline, or d
 
 ```
 .claude-plugin/plugin.json          — plugin metadata (name, version)
+.claude-plugin/marketplace.json     — Claude Cowork marketplace config (categories, tags, pricing, icon)
 skills/
   workshop-slides/
     SKILL.md                        — skill instructions (Claude reads this at invocation)
