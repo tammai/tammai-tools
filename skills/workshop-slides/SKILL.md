@@ -64,17 +64,53 @@ Include a third option in the saved-preset case: **"Update my preset"** — re-c
 
 **Saved preset** → read values from `~/.workshop-slides-preset.json` and inject (see below).
 
-**Create / Update preset** → collect these fields:
+**Create / Update preset** → collect these fields in order:
 
-| Field | Example |
+**Preset name** — free text (e.g. `My Company`, `ACME Corp`).
+
+**Accent color** — present the full Tailwind accent palette via `AskUserQuestion`. Each option label is the color name; the description is the 500-shade hex. Group as a single-select:
+
+| Label | Hex (500) |
 |---|---|
-| Preset name | `My Company`, `ACME Corp` |
-| Accent color | `#6366f1` (indigo), `#10b981` (emerald), `#e11d48` (rose) |
-| Background color | `#0a0a0a`, `#1a1a2e`, `#0f0f23` |
-| Heading font | `Inter`, `Poppins`, `Plus Jakarta Sans` |
-| Body font | `DM Sans`, `Outfit`, `Nunito` |
-| Code font | `Fira Code`, `Source Code Pro`, `Cascadia Code` |
-| Logo | URL to SVG/PNG, or "none" |
+| Red | `#ef4444` |
+| Orange | `#f97316` |
+| Amber | `#f59e0b` |
+| Yellow | `#eab308` |
+| Lime | `#84cc16` |
+| Green | `#22c55e` |
+| Emerald | `#10b981` |
+| Teal | `#14b8a6` |
+| Cyan | `#06b6d4` |
+| Sky | `#0ea5e9` |
+| Blue | `#3b82f6` |
+| Indigo | `#6366f1` |
+| Violet | `#8b5cf6` |
+| Purple | `#a855f7` |
+| Fuchsia | `#d946ef` |
+| Pink | `#ec4899` |
+| Rose | `#f43f5e` |
+
+If the user selects "Other", ask them to type a hex code.
+
+**Background color** — present the full Tailwind neutral palette via `AskUserQuestion`. Use the 950 shade (darkest) as the primary suggestion for each scale, with the 900 shade shown in the description:
+
+| Label | 950 hex | 900 hex |
+|---|---|---|
+| Slate | `#020617` | `#0f172a` |
+| Gray | `#030712` | `#111827` |
+| Zinc | `#09090b` | `#18181b` |
+| Neutral | `#0a0a0a` | `#171717` |
+| Stone | `#0c0a09` | `#1c1917` |
+
+Present each as: label = scale name + shade (e.g. "Slate 950"), description = hex value. If the user selects "Other", ask them to type a hex code.
+
+**Heading font** — `Inter`, `Poppins`, `Plus Jakarta Sans` (or custom).
+
+**Body font** — `DM Sans`, `Outfit`, `Nunito` (or custom).
+
+**Code font** — `Fira Code`, `Source Code Pro`, `Cascadia Code` (or custom).
+
+**Logo** — URL to SVG/PNG, or "none".
 
 After collecting, **save** to `~/.workshop-slides-preset.json`:
 
