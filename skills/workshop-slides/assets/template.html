@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workshop Slides</title>
+
+  <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  FONTS — update the URL below when changing font families   ║
+    ╚══════════════════════════════════════════════════════════════╝
+    Default: Google Sans (headings) · Space Grotesk (body) · JetBrains Mono (code)
+    Replace family names in the URL and in --brand-font-* variables below.
+    Google Fonts URL builder: https://fonts.google.com
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ╔══════════════════════════════════════════════════════════════╗
+       ║  BRAND CONFIGURATION — edit this section to match your brand ║
+       ╚══════════════════════════════════════════════════════════════╝ */
+    :root {
+      /* Accent color: used for highlights, bullets, borders, CTAs.
+         Pick any CSS color that reads well on a dark background.    */
+      --brand-accent: #f97316;
+
+      /* Page background: works best as a very dark color.           */
+      --brand-bg: #020617;
+
+      /* Fonts: update the Google Fonts <link> above when changing.  */
+      --brand-font-main: 'Google Sans', system-ui, sans-serif;
+      --brand-font-body: 'Space Grotesk', sans-serif;
+      --brand-font-code: 'JetBrains Mono', monospace;
+    }
+    /* ══════════════════════════════════════════════════════════════ */
+
+    /* ============================================================
+       DESIGN TOKENS — Tailwind CSS slate scale
+       https://tailwindcss.com/docs/colors
+    ============================================================ */
+    :root {
+      --slate-50:  #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --slate-950: #020617;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--brand-bg);
+      color: var(--slate-100);
+      font-family: var(--brand-font-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================================================
+       BACKGROUND DECORATION
+    ============================================================ */
+    #bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    #bg::before {
+      content: '';
+      position: absolute;
+      width: 700px;
+      height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        color-mix(in srgb, var(--brand-accent) 7%, transparent) 0%,
+        transparent 70%
+      );
+      top: -280px;
+      right: -220px;
+    }
+    #bg::after {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        color-mix(in srgb, var(--slate-700) 30%, transparent) 0%,
+        transparent 70%
+      );
+      bottom: -180px;
+      left: -120px;
+    }
+
+    /* ============================================================
+       SLIDE SYSTEM
+    ============================================================ */
+    #deck {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 52px 72px 96px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(16px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .slide.exit {
+      opacity: 0;
+      transform: translateY(-16px);
+    }
+
+    /* ============================================================
+       SLIDE HEADER
+    ============================================================ */
+    .slide-header {
+      flex-shrink: 0;
+      margin-bottom: 40px;
+    }
+
+    /* Slide number — small, non-intrusive */
+    .slide-num {
+      display: block;
+      font-family: var(--brand-font-body);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--brand-accent);
+      margin-bottom: 10px;
+    }
+
+    .slide-title {
+      font-size: 2.9rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--slate-50);
+    }
+
+    .slide-subtitle {
+      margin-top: 10px;
+      font-family: var(--brand-font-body);
+      font-size: 1.05rem;
+      font-weight: 400;
+      color: var(--slate-400);
+      line-height: 1.55;
+    }
+
+    /* Accent rule under header */
+    .slide-header::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--brand-accent);
+      margin-top: 20px;
+    }
+
+    /* ============================================================
+       COVER SLIDE VARIANT
+    ============================================================ */
+    .slide--cover {
+      justify-content: center;
+    }
+
+    .slide--cover .slide-header {
+      margin-bottom: 0;
+    }
+
+    .slide--cover .slide-header::after {
+      display: none;
+    }
+
+    .slide--cover .slide-title {
+      font-size: 4.2rem;
+    }
+
+    .slide--cover .slide-subtitle {
+      font-size: 1.15rem;
+      max-width: 500px;
+    }
+
+    .cover-meta {
+      margin-top: 44px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--brand-font-body);
+      font-size: 0.85rem;
+      color: var(--slate-500);
+      letter-spacing: 0.04em;
+    }
+
+    .cover-meta::before {
+      content: '';
+      width: 36px;
+      height: 2px;
+      background: var(--brand-accent);
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+
+    /* ============================================================
+       SECTION DIVIDER VARIANT
+    ============================================================ */
+    .slide--section {
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .slide--section .slide-header::after { display: none; }
+
+    .slide--section .section-label {
+      display: inline-block;
+      font-family: var(--brand-font-body);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--slate-600);
+      border: 1px solid var(--slate-700);
+      border-radius: 4px;
+      padding: 4px 10px;
+      margin-bottom: 20px;
+    }
+
+    .slide--section .slide-title {
+      font-size: 3.8rem;
+    }
+
+    /* ============================================================
+       SLIDE BODY
+    ============================================================ */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      gap: 0;
+      align-items: stretch;
+      min-height: 0;
+    }
+
+    /* Column */
+    .col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 0 32px;
+    }
+
+    .col:first-child { padding-left: 0; }
+    .col:last-child  { padding-right: 0; }
+
+    /* Dividers between columns */
+    .slide-body.cols-2 .col + .col,
+    .slide-body.cols-3 .col + .col {
+      border-left: 1px solid var(--slate-800);
+    }
+
+    /* Column label */
+    .col-label {
+      font-family: var(--brand-font-body);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--brand-accent);
+      margin-bottom: 20px;
+    }
+
+    .col-label.muted {
+      color: var(--slate-500);
+    }
+
+    /* ============================================================
+       CONTENT TYPES
+    ============================================================ */
+
+    /* --- Text --- */
+    .text {
+      font-family: var(--brand-font-body);
+      font-size: 1.575rem;
+      line-height: 1.75;
+      color: var(--slate-300);
+    }
+
+    .text p + p { margin-top: 1em; }
+
+    .text strong { color: var(--slate-50);  font-weight: 600; }
+    .text em     { color: var(--brand-accent); font-style: normal; }
+
+    /* --- List --- */
+    .list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--brand-font-body);
+      font-size: 1.54rem;
+      color: var(--slate-300);
+      line-height: 1.55;
+    }
+
+    .list li::before {
+      content: '';
+      flex-shrink: 0;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--brand-accent);
+    }
+
+    .list li strong { color: var(--slate-100); font-weight: 600; }
+
+    /* Numbered list variant */
+    .list.numbered { counter-reset: item; }
+    .list.numbered li::before {
+      content: counter(item);
+      counter-increment: item;
+      background: none;
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      font-family: var(--brand-font-body);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--brand-accent);
+      min-width: 18px;
+    }
+
+    /* --- Callout --- */
+    .callout {
+      background: color-mix(in srgb, var(--brand-accent) 8%, transparent);
+      border-left: 3px solid var(--brand-accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      font-family: var(--brand-font-body);
+      font-size: 1.5rem;
+      color: var(--slate-200);
+      line-height: 1.65;
+    }
+
+    /* --- Code block --- */
+    .code-block {
+      background: var(--slate-900);
+      border: 1px solid var(--slate-700);
+      border-radius: 12px;
+      padding: 20px 24px;
+      font-family: var(--brand-font-code);
+      font-size: 1.26rem;
+      line-height: 1.7;
+      color: var(--slate-200);
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .code-lang {
+      font-family: var(--brand-font-body);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--brand-accent);
+      margin-bottom: 12px;
+    }
+
+    .code-block .kw  { color: var(--brand-accent); }
+    .code-block .str { color: var(--slate-300); }
+    .code-block .cmt { color: var(--slate-600); }
+    .code-block .fn  { color: var(--slate-100); }
+
+    /* --- Stat --- */
+    .stat-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      gap: 8px;
+    }
+
+    .stat-number {
+      font-size: 7.5rem;
+      font-weight: 700;
+      color: var(--brand-accent);
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .stat-label {
+      font-family: var(--brand-font-body);
+      font-size: 1.35rem;
+      color: var(--slate-400);
+      letter-spacing: 0.06em;
+    }
+
+    /* --- Tag group --- */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-family: var(--brand-font-body);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--slate-700);
+      color: var(--slate-300);
+      background: color-mix(in srgb, var(--slate-700) 30%, transparent);
+    }
+
+    .tag.accent {
+      border-color: var(--brand-accent);
+      color: var(--brand-accent);
+      background: color-mix(in srgb, var(--brand-accent) 10%, transparent);
+    }
+
+    /* --- Spacer --- */
+    .spacer { flex: 1; }
+
+    /* ============================================================
+       WATERMARK — BigIn logo, bottom left
+    ============================================================ */
+    #watermark {
+      position: fixed;
+      bottom: 20px;
+      left: 40px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #watermark svg,
+    #watermark img {
+      height: 80px;
+      width: auto;
+      opacity: 0.35;
+    }
+
+    /* ============================================================
+       NAVIGATOR — bottom right, vertical, 80px wide
+    ============================================================ */
+    #navigator {
+      position: fixed;
+      bottom: 20px;
+      right: 40px;
+      z-index: 10;
+      width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      opacity: 0.5;
+      transition: opacity 0.25s ease;
+    }
+
+    #navigator:hover { opacity: 1; }
+
+    .nav-btn {
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--slate-300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: var(--slate-800);
+      color: var(--brand-accent);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+
+    .nav-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .nav-label {
+      font-family: var(--brand-font-body);
+      font-size: 12px;
+      color: var(--slate-500);
+      text-align: center;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .nav-label .cur {
+      color: var(--slate-100);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Ambient background -->
+<div id="bg" aria-hidden="true"></div>
+
+<!-- ================================================================
+     SLIDE DECK
+================================================================ -->
+<div id="deck">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SLIDES GO HERE — replace this comment block with <section>
+       elements following the patterns in SKILL.md.
+
+       First slide must have: class="slide slide--cover active"
+       All others:           class="slide"
+       Section dividers:     class="slide slide--section"
+  ══════════════════════════════════════════════════════════════ -->
+
+</div><!-- /#deck -->
+
+<!-- ================================================================
+     LOGO / WATERMARK
+     Replace the <svg> below with your own logo.
+
+     Options:
+       • Inline SVG:  paste your SVG markup directly
+       • Image file:  <img src="your-logo.png" alt="Your Brand">
+       • Remote URL:  <img src="https://example.com/logo.svg" alt="Your Brand">
+
+     Keep height around 80px. Opacity is set in #watermark svg / #watermark img above.
+     To remove the watermark entirely, delete this whole block.
+================================================================ -->
+<div id="watermark" aria-hidden="true">
+  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="121px" height="80px" viewBox="0 0 121 80"><title>Logo</title><g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="Header/Expand" transform="translate(-64.000000, -24.000000)"><g id="Logo" transform="translate(64.000000, 24.000000)"><path d="M69.231611,51.634941 L69.7901793,51.6476515 C72.1823645,51.7583759 74.0433881,52.5925462 75.3936464,54.151364 L75.675177,54.4964884 L76.2463397,55.2397735 L76.2460476,51.9500463 L81.171179,51.9500463 L81.1732905,68.9938154 L81.1635706,69.6443946 C81.0599063,73.0597436 80.1272693,75.6049067 78.3766108,77.2956138 C76.5127073,79.095688 73.7715525,80.0005114 70.1365121,80 C68.5477576,80.0070451 66.9659737,79.8292043 65.4221012,79.4700317 L64.6534676,79.2753529 L64.0784157,79.1119969 L63.4023022,78.8783434 C62.6897796,78.6074974 62.0059441,78.2679636 61.3600026,77.8643683 L60.8827954,77.5497327 L60.6186356,77.3583107 L62.6392568,73.5870212 L62.7693985,73.6852292 C63.6512218,74.3264117 64.6342242,74.8169825 65.6786862,75.1357415 C66.9644469,75.5649865 68.3185271,75.7867712 69.681905,75.790206 C71.7873564,75.790207 73.3638225,75.2938332 74.3976602,74.2850751 C75.3463885,73.3593617 75.8550286,72.0146714 75.9332136,70.2653547 L75.9438716,69.778247 L75.9438716,68.0394873 L75.3863069,68.6723969 L75.0857243,68.9937392 C73.6469115,70.4415954 71.702303,71.1650528 69.2318136,71.1634778 C67.5046826,71.1826827 65.8047201,70.7621749 64.2879263,69.941488 C62.8150272,69.1469611 61.5894483,67.9607881 60.7456125,66.5132216 C58.9980829,63.3321441 58.9980829,59.4662746 60.7496148,56.2781266 C61.5908294,54.838871 62.8162144,53.6528857 64.2878763,52.8569578 C65.4679337,52.2195448 66.7584477,51.8235393 68.086165,51.6874756 L68.657251,51.6451314 L69.231611,51.634941 Z M16.0904902,9.20863742 C24.5186527,18.9727269 24.6004018,26.8307181 21.3942671,34.6244097 L20.9675023,35.6191417 L20.9675023,35.6191417 L20.5073544,36.6140266 L20.5073544,36.6140266 L20.0161622,37.6099159 L20.0161622,37.6099159 L19.4962644,38.6076611 L19.4962644,38.6076611 L18.9499997,39.6081138 C18.8568883,39.7751289 18.7627756,39.9422922 18.6677106,40.1096216 C20.2429377,39.6008819 21.8778205,39.306385 23.5286321,39.2330107 L24.3551628,39.2147823 C34.259909,39.2066586 42.4180264,47.0183169 42.8752448,56.9441682 C43.3324632,66.8700196 35.9272164,75.4025925 26.0606618,76.3184929 C16.1941072,77.2343933 7.35276285,70.209972 5.98523103,60.3686239 L5.93931618,60.006284 C5.9193532,59.8421301 5.90138653,59.6779761 5.88541614,59.5118202 L5.82752351,58.7050635 L5.8100559,58.2889232 L5.8100559,58.2889232 L5.80756053,57.7421604 C5.82043987,51.7429849 8.61821688,46.2333425 10.7687182,42.9729651 L11.2706536,42.2345614 C11.3516525,42.1189921 11.4311764,42.0072468 11.5090056,41.8994383 L11.9538886,41.3007283 C12.0240608,41.209117 12.092099,41.1216676 12.1577836,41.0384928 C19.7647936,30.3682786 19.9288268,21.9370386 18.6386179,16.2489411 L18.4497533,15.4731068 C18.4169038,15.3467852 18.3834183,15.2219598 18.3493724,15.098637 L18.1389728,14.3767824 L18.1389728,14.3767824 L17.9187361,13.6912946 L17.9187361,13.6912946 L17.6922776,13.0424781 L17.6922776,13.0424781 L17.4632128,12.4306373 L17.4632128,12.4306373 L17.0117269,11.3191001 L17.0117269,11.3191001 L16.1604631,9.37597446 C16.1360925,9.31855756 16.112743,9.26277643 16.0904902,9.20863742 Z M112.920004,51.6375558 L113.472975,51.6507699 C115.46885,51.7476733 117.116559,52.3775403 118.428045,53.5402662 L118.777395,53.8705846 L119.063215,54.1774772 L119.329457,54.503985 C120.34812,55.839947 120.902954,57.6409151 120.988353,59.9158933 L121,60.548101 L120.999301,72.1765163 L115.770333,72.1765163 L115.770581,61.4789599 L115.759526,60.9747886 C115.693147,59.4997528 115.32744,58.3622598 114.651152,57.5687912 C113.891022,56.6769534 112.785498,56.2331282 111.360729,56.2331282 C109.954193,56.2331282 108.79062,56.6434394 107.886244,57.4635272 L107.594408,57.752066 L107.350061,58.0393562 L107.129262,58.3498346 C106.571809,59.2086378 106.264909,60.3141023 106.203591,61.6607967 L106.192099,62.1771041 L106.192036,72.1765163 L100.960943,72.1765163 L100.960943,51.9500463 L105.907322,51.9500463 L105.907883,54.9069173 L106.463956,54.2845898 L106.802905,53.9293799 C107.502698,53.2425262 108.331301,52.6988722 109.242565,52.330866 C110.042932,52.0076014 110.881546,51.7952163 111.736421,51.6980757 L112.380282,51.6468969 L112.920004,51.6375558 Z M54.1721954,51.9500463 L54.1721954,72.1765163 L48.9432272,72.1765163 L48.9432272,51.9500463 L54.1721954,51.9500463 Z M93.8090915,45.6666944 L93.8090915,72.1765163 L88.3549016,72.1765163 L88.3549016,45.6666944 L93.8090915,45.6666944 Z M29.5896042,45.1417661 C24.4798056,43.0186448 18.5977719,44.1913649 14.6864385,48.1130585 C10.7751051,52.0347521 9.60479503,57.9330557 11.7212524,63.0574469 C13.8377097,68.1818381 18.8241058,71.5230864 24.3551628,71.5230864 C31.9034864,71.5153643 38.0209997,65.3816472 38.0298026,57.8122261 C38.0306098,52.2657089 34.6994028,47.2648874 29.5896042,45.1417661 Z M70.3967979,55.9637825 C68.7645658,55.9656382 67.4078771,56.4659944 66.3437699,57.4646495 C65.2760354,58.4721647 64.7401559,59.7918534 64.7382966,61.4027644 C64.7364835,63.014231 65.2726161,64.3336113 66.3437562,65.3389859 C67.409441,66.3410893 68.7663695,66.8424564 70.3971563,66.8424564 C72.0284613,66.8424564 73.3799228,66.3407217 74.4339283,65.3374506 C75.4902285,64.3302316 76.0194886,63.011763 76.0194886,61.4031315 C76.0194886,59.7945796 75.49029,58.4753333 74.4343431,57.4665932 C73.3817129,56.4628732 72.0300185,55.9619754 70.3967979,55.9637825 Z M8.95771836,0 C17.8975443,9.80920073 17.9575109,17.8348322 14.6883197,25.9408245 L14.2717492,26.9339233 C14.1275977,27.2651747 13.9782774,27.5966866 13.8241656,27.928586 L13.3478336,28.9255728 L13.3478336,28.9255728 L12.8450178,29.9256443 L12.8450178,29.9256443 L12.3179829,30.9295609 L12.3179829,30.9295609 L11.7689936,31.9380832 L11.7689936,31.9380832 L10.9092988,33.4611657 L10.9092988,33.4611657 L10.0129452,34.9988885 L10.0129452,34.9988885 L7.82182495,38.6582602 L7.82182495,38.6582602 C3.55596577,45.7442181 3.38973978,51.941402 4.13593855,56.1376367 L4.28095581,56.8782919 C4.30656456,56.997977 4.33283379,57.1157629 4.35967481,57.2316184 L4.52687288,57.9033412 L4.52687288,57.9033412 L4.70353684,58.5272522 L4.70353684,58.5272522 L4.88540961,59.1018658 L4.88540961,59.1018658 L5.15867299,59.8681043 L5.15867299,59.8681043 L5.33494318,60.3129756 L5.33494318,60.3129756 L5.5798477,60.8776373 L5.5798477,60.8776373 L5.78858013,61.3146683 L5.78858013,61.3146683 L6.05909405,61.8179834 L6.05909405,61.8179834 C-0.851233167,55.3479718 -0.790448345,47.6390333 1.07211451,41.5234032 L1.35694685,40.6401357 C1.40636259,40.4949297 1.45670017,40.3507537 1.5078846,40.2076488 L1.82455315,39.3622018 L1.82455315,39.3622018 L2.15794563,38.544434 L2.15794563,38.544434 L2.50446185,37.756318 L2.50446185,37.756318 L2.86050163,36.9998264 L2.86050163,36.9998264 L3.2224648,36.2769315 L3.2224648,36.2769315 L3.58675116,35.5896059 L3.58675116,35.5896059 L3.94976055,34.9398222 L3.94976055,34.9398222 L4.30789278,34.3295528 L4.30789278,34.3295528 L4.82807106,33.492553 L4.82807106,33.492553 L5.1582596,32.9896991 L5.1582596,32.9896991 L5.6196465,32.3230688 L5.6196465,32.3230688 L5.89939023,31.9399587 L5.89939023,31.9399587 C12.3597033,22.3236448 13.061566,14.6184262 12.1402123,9.05557302 L11.981849,8.1950651 C11.9534078,8.05462562 11.9239933,7.9156782 11.8936807,7.77822705 L11.7016319,6.97150923 L11.7016319,6.97150923 L11.4916478,6.20090435 C11.4553568,6.07549086 11.4184693,5.9515905 11.3810605,5.82920749 L11.150956,5.11315136 L11.150956,5.11315136 L10.9119596,4.43371395 L10.9119596,4.43371395 L10.6676886,3.79109756 L10.6676886,3.79109756 L10.2993052,2.89665493 L10.2993052,2.89665493 L9.71020599,1.59288834 L9.71020599,1.59288834 L8.95771836,0 L8.95771836,0 Z M51.5714691,42.289463 C52.4532891,42.2522948 53.315473,42.5573448 53.9787915,43.1411996 C54.571782,43.6661602 54.9043936,44.4273186 54.8873191,45.2212594 C54.91279,46.0882152 54.5788582,46.9099227 53.9678805,47.5003549 C53.4046435,48.0343349 52.6719299,48.3498956 51.9025651,48.396281 L51.2310916,48.3971203 C50.4447817,48.3531502 49.7111032,48.0430411 49.140943,47.5141715 C48.5597635,46.9487377 48.228657,46.1641034 48.228657,45.3445078 C48.228657,44.5249121 48.5597635,43.7402778 49.1464282,43.1696337 C49.7123915,42.6466475 50.4453641,42.3373405 51.2139496,42.2924054 L51.5714691,42.289463 Z" id="Typo" fill="#FF6400"></path><path d="M18.2478454,52.9159862 L23.2694402,50.0143966 C23.9379855,49.6280962 24.7617039,49.6280699 25.4302739,50.0143276 L30.4527495,52.9159983 C31.1213195,53.302256 31.5331066,54.0161082 31.5331066,54.7886237 L31.5327364,60.5911612 C31.5326871,61.3635288 31.1209161,62.0772151 30.4524987,62.4634415 L25.430904,65.3650311 C24.7623586,65.7513316 23.9386402,65.7513579 23.2700702,65.3651002 L18.2475947,62.4634295 C17.5790247,62.0771717 17.1672375,61.3633195 17.1672375,60.5908041 L17.1676077,54.7882665 C17.167657,54.015899 17.5794281,53.3022127 18.2478454,52.9159862 Z" id="Dot" fill="#0086FF" fill-rule="nonzero"></path></g></g></g></svg>
+</div>
+
+<!-- ================================================================
+     NAVIGATOR
+================================================================ -->
+<nav id="navigator" aria-label="Slide navigation">
+  <!-- Prev (chevron up) -->
+  <button class="nav-btn" id="prevBtn" aria-label="Previous slide" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"/>
+    </svg>
+  </button>
+  <!-- Page indicator -->
+  <div class="nav-label">
+    <span class="cur" id="curPage">1</span>
+    <span style="color:var(--slate-700)"> / </span>
+    <span id="totPage">7</span>
+  </div>
+  <!-- Next (chevron down) -->
+  <button class="nav-btn" id="nextBtn" aria-label="Next slide">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </button>
+</nav>
+
+<!-- ================================================================
+     NAVIGATION SCRIPT
+================================================================ -->
+<script>
+  const slides  = Array.from(document.querySelectorAll('.slide'));
+  const total   = slides.length;
+  let   current = 0;
+
+  const prevBtn  = document.getElementById('prevBtn');
+  const nextBtn  = document.getElementById('nextBtn');
+  const curPage  = document.getElementById('curPage');
+  const totPage  = document.getElementById('totPage');
+
+  totPage.textContent = total;
+
+  function goTo(index) {
+    if (index < 0 || index >= total) return;
+    const outgoing = slides[current];
+    outgoing.classList.add('exit');
+    outgoing.classList.remove('active');
+    // Clean up exit class after transition ends
+    outgoing.addEventListener('transitionend', () => outgoing.classList.remove('exit'), { once: true });
+    current = index;
+    slides[current].classList.add('active');
+    curPage.textContent  = current + 1;
+    prevBtn.disabled     = current === 0;
+    nextBtn.disabled     = current === total - 1;
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) {
+      e.preventDefault(); goTo(current + 1);
+    }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+      e.preventDefault(); goTo(current - 1);
+    }
+  });
+
+  // Init state — first slide already has .active in HTML, just sync controls
+  curPage.textContent = 1;
+  totPage.textContent = total;
+  prevBtn.disabled    = true;
+  nextBtn.disabled    = total <= 1;
+</script>
+
+</body>
+</html>
