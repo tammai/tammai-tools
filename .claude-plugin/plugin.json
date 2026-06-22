@@ -6,17 +6,5 @@
     "name": "Tam Mai",
     "email": "tam.mai@bigin.vn"
   },
-  "keywords": ["workshop", "slides", "presentation", "bigin"],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/tammai/tammai-tools"
-  },
-  "homepage": "https://github.com/tammai/tammai-tools#readme",
-  "marketplace": {
-    "categories": ["Productivity", "Presentations", "Education"],
-    "tags": ["slides", "workshop", "html", "bigin", "dark-theme"],
-    "pricing": "free",
-    "icon": "skills/workshop-slides/assets/favicon.ico"
-  }
+  "keywords": ["workshop", "slides", "presentation", "bigin"]
 }
