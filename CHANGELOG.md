@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-06-22
+
+### Fixed
+- `marketplace.json` schema corrected to match Claude Cowork format — replaced invented fields (`categories`, `tags`, `pricing`, `icon`) with the proper structure (`name`, `description`, `owner`, `plugins[]`)
+
 ## [0.2.0] — 2026-06-22
 
 ### Added
