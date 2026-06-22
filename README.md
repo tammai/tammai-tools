@@ -1,31 +1,61 @@
 # tammai-tools
 
-A Cowork plugin by Tam Mai — workshop and presentation utilities built on the BigIn design system.
+A **Claude Cowork plugin** by Tam Mai — workshop and presentation utilities built on the BigIn design system.
 
 ## Skills
 
-### workshop-slides
+### `workshop-slides`
 
 Generates a complete, self-contained HTML slide deck from a topic, outline, or detailed content brief.
 
-**How to use:** Just ask Claude to create slides:
+**Trigger phrases**
 
 - "Create slides for a Docker workshop"
 - "Build a presentation about GraphQL for our backend team"
-- "Make workshop slides for Intro to Figma — cover, why design systems matter, components, variables, and wrap-up"
+- "Make workshop slides for Intro to Figma — cover, components, variables, wrap-up"
 
-The output is a single `.html` file you open directly in any browser — no server, no dependencies.
+**Output** — a single `.html` file you open directly in any browser. No server, no dependencies, no bundler.
 
-**Slide features:**
-- Smooth fade+slide transitions
-- Keyboard navigation (← → arrow keys, Space)
-- Bottom-right page navigator
-- 1, 2, and 3-column body layouts
-- Content types: bullet lists, numbered lists, callouts, code blocks, stat blocks, tags
-- Cover, content, and section-divider slide variants
+**Slide features**
 
-**Note on the logo:** The slide template includes the BigIn watermark by default. If you're using this plugin outside BigIn, you can ask Claude to swap it out for your own logo when generating a deck.
+| Feature | Detail |
+|---|---|
+| Navigation | Keyboard (← → Space) + bottom-right click navigator |
+| Layouts | 1, 2, and 3-column body |
+| Content types | Bullet lists, numbered lists, callouts, code blocks, stat blocks, tags |
+| Slide variants | Cover, content, section-divider |
+| Transitions | Smooth fade + slide |
+| Branding | Fully themeable via CSS variables; presets saved to `~/.workshop-slides-preset.json` |
+
+**Default brand:** dark slate (`#020617`) + orange accent (`#f97316`), Google Sans / Space Grotesk / JetBrains Mono, BigIn watermark.
+
+## Repository structure
+
+```
+.claude-plugin/plugin.json          — plugin metadata (name, version)
+skills/
+  workshop-slides/
+    SKILL.md                        — skill instructions (Claude reads this at invocation)
+    assets/
+      template.html                 — base HTML template for generated decks
+      favicon.ico                   — browser tab icon
+    demo.html                       — live demo of all slide components
+```
+
+Skills are discovered automatically by Claude Cowork from the `skills/` directory. Each skill folder must contain a `SKILL.md` with YAML frontmatter (`name`, `description`, `triggers`).
 
 ## Installation
 
 Open `tammai-tools.plugin` in Claude Cowork — a **Save plugin** button will appear. Click it to install.
+
+## Adding a new skill
+
+1. Create `skills/<skill-name>/SKILL.md` with the required YAML frontmatter.
+2. Add any static assets under `skills/<skill-name>/assets/`.
+3. Reference assets by relative path from `SKILL.md` (e.g. `assets/template.html`).
+
+See [CLAUDE.md](CLAUDE.md) for full development guidance.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
