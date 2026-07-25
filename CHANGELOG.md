@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-07-25
+
+### Added
+- **`slides-to-pdf` self-hosts the deck's fonts, so the PDF no longer depends on the font CDN.** The deck keeps its Google Fonts `<link>` — correct for an interactive page, small file, shared cache — but a PDF is a *snapshot* of whatever rendered, so a blocked or slow CDN is baked in permanently and silently, with nothing to re-try later. This is not hypothetical: Claude Cowork blocks `fonts.googleapis.com` outright, and a deck exported there produced a PDF in fallback fonts. Before rendering, the script now reads the families off the live page (`--brand-font-*`, so presets are covered too), fetches the woff2 from npm's `@fontsource*` packages — npm stays reachable where Google's CDN does not — and injects them as `data:` URI `@font-face` rules via `add_style_tag`. The deck itself is never modified, the same contract as every other override there. On by default; `--no-embed-fonts` restores the old behaviour, `--font-subsets` and `--font-dir` cover the rest
+- Measured against the online-CDN render, with the deck's font host pointed at an unresolvable TLD. A 21-slide deck (Google Sans + JetBrains Mono): cover page **0.00%** of pixels differ with embedding vs **3.35%** without; a code-heavy slide **1.28%** vs **7.36%**. The residual 1.28% was checked rather than assumed — cropping the differing band from both renders shows identical letterforms, advances and line breaks, i.e. sub-pixel antialiasing between Fontsource's variable build and Google's, not a substitution. A 15-slide deck measured 0.19% vs 2.64% on the same test
+- Default subsets are `latin,latin-ext,vietnamese`. Vietnamese is load-bearing rather than generous: without it the *diacritics alone* fall out of the embedded face and the browser substitutes a system font for those glyphs only, so a slide renders in two typefaces at once — harder to notice than a wholesale fallback
+- Graceful degradation, both paths tested with `npm` stripped from `PATH`: without `--font-dir` it warns and still writes a valid PDF using whatever the page loaded; with `--font-dir` it embeds from pre-fetched `npm pack` tarballs and produces a size-identical result to the npm path. It never fails an export over fonts
+
+### Changed
+- **Code font is now Fira Code, replacing JetBrains Mono**, in the BigIn default and across both skills — `workshop-slides/assets/template.html`, `soft-visuals/assets/template.html`, `assets/gallery.html`, both `demo.html`, plus `README.md` and `CLAUDE.md`. Verified by rendering: `Fira Code 400` and `Google Sans 400 700` both load and `.code-block` / `code` compute to `"Fira Code", monospace`. Google Sans is untouched and still requested as a variable font over `wght 400..700`. Generated decks are static files, so existing ones keep whatever they were built with
+- The custom-preset flow now suggests **Google Sans** as the first heading font instead of Inter, with the example preset JSON and its `googleFontsUrl` updated to the variable-font request form
+
+### Fixed
+- **Build scratch no longer lands in the user's deliverable folder.** `workshop-slides/SKILL.md` gave the build command with a bare relative fragment path, and on a sandboxed host the working directory *is* the user-visible `outputs/` folder — an observed Cowork run left `slides-fragment.html` and four `pgN.png` verification rasters sitting beside the deck, with the sandbox unable to delete them. The fragment now goes to `$TMPDIR`, with an explicit rule that scaffolding (fragments, page rasters, thumbnails) never enters the output folder and is deleted once the deck verifies
+- **`slides-to-pdf` checks for an existing browser before attempting the Playwright CDN download.** Step 2 previously instructed `playwright install chromium` first and documented the npm fallback only afterwards, so on a host that blocks `playwright.azureedge.net` the first move was a guaranteed multi-minute stall on a ~130 MB download that cannot succeed — the probe answers the same question immediately
+- A missing `npm` reported as `no Fontsource package for 'Google Sans'`, once per family, which reads as a misspelled font name and sends the reader off checking spellings. It now names npm as the cause and gives both ways forward
+- `workshop-slides/SKILL.md` no longer implies a preset saved to `~/.workshop-slides-preset.json` always persists. Where `$HOME` is not writable or not retained, the save silently buys nothing; the skill now says to report that rather than quietly dropping the JSON into the output folder, which is what a Cowork run did
+
 ## [0.3.5] — 2026-07-25
 
 ### Added

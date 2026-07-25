@@ -16,9 +16,15 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import base64
 import io
 import os
+import re
+import shutil
+import subprocess
 import sys
+import tarfile
+import tempfile
 from pathlib import Path
 
 MISSING = []
@@ -214,6 +220,223 @@ def find_browser(explicit: str | None) -> str | None:
     return None
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Font embedding — make the PDF independent of the font CDN.
+#
+# The deck deliberately keeps its Google Fonts <link>: as an interactive page it
+# should stay a small file and pick up the CDN's own caching. A PDF cannot do
+# that. It is a snapshot of whatever rendered at export time, so a blocked or
+# slow CDN is baked in permanently and silently — the PDF simply *is* the
+# fallback font, with nothing to re-try later.
+#
+# So the export self-hosts the same families for the duration of the render:
+# fetch the woff2 from npm's @fontsource* packages (npm stays reachable in
+# sandboxes that block fonts.googleapis.com), inject them as data: URIs, and let
+# the page re-layout before any page.pdf() call. Nothing is written to the deck —
+# same contract as every other override here.
+#
+# Two traps that produce a silently wrong result:
+#   * The variable packages name the family `'<Family> Variable'`. Injected
+#     verbatim, `--brand-font-main: 'Google Sans'` matches nothing and the page
+#     falls back while *looking* correctly wired. The family is forced back to
+#     the name the deck actually asks for.
+#   * They ship `format('woff2-variations')`, long deprecated. An engine that
+#     does not recognise the format string skips that `src` entirely, so it is
+#     normalised to `format('woff2')` — universally accepted, and correct for
+#     variable fonts too.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# `vietnamese` is not optional for this plugin's audience: without it the
+# diacritics alone fall out of the embedded face and the browser substitutes a
+# system font for those glyphs only, so a slide renders in two typefaces at once.
+DEFAULT_SUBSETS = ("latin", "latin-ext", "vietnamese")
+
+FACE_RE = re.compile(r"@font-face\s*\{[^}]*\}", re.DOTALL)
+
+# The families the deck actually asks for, read off the live page rather than
+# regexed out of the file — a preset may have rewritten them.
+FAMILIES_JS = """() => {
+  const cs = getComputedStyle(document.documentElement);
+  const out = [];
+  for (const v of ['--brand-font-main', '--brand-font-body', '--brand-font-code']) {
+    const m = cs.getPropertyValue(v).trim().match(/^\\s*['"]?([^'",]+)/);
+    if (m && !out.includes(m[1].trim())) out.push(m[1].trim());
+  }
+  return out;
+}"""
+
+
+def _slug(family: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", family.lower()).strip("-")
+
+
+def _npm_pack(pkg: str, dest: Path) -> Path | None:
+    """Fetch a package tarball with `npm pack`. None if unavailable."""
+    try:
+        r = subprocess.run(
+            ["npm", "pack", pkg, "--pack-destination", str(dest), "--silent"],
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if r.returncode != 0:
+        return None
+    for line in reversed((r.stdout or "").strip().splitlines()):
+        cand = dest / line.strip()
+        if cand.is_file():
+            return cand
+    tgz = sorted(dest.glob("*.tgz"))
+    return tgz[-1] if tgz else None
+
+
+def _find_tgz(pkg: str, cache: Path) -> Path | None:
+    """A pre-fetched tarball in the cache dir, else fetch it with npm."""
+    stem = pkg.lstrip("@").replace("/", "-")
+    for cand in sorted(cache.glob(stem + "-*.tgz")):
+        # `fontsource-google-sans-*` cannot match `fontsource-variable-google-…`:
+        # the variable package's stem carries the extra token.
+        return cand
+    return _npm_pack(pkg, cache)
+
+
+def _read_pkg(tgz: Path) -> tuple[dict[str, str], dict[str, bytes]]:
+    """Return ({css name: text}, {woff2 basename: bytes}) from a package tarball."""
+    css: dict[str, str] = {}
+    woff2: dict[str, bytes] = {}
+    with tarfile.open(tgz) as t:
+        for m in t.getmembers():
+            if not m.isfile():
+                continue
+            name = m.name.split("package/", 1)[-1]
+            f = t.extractfile(m)
+            if f is None:
+                continue
+            if name.endswith(".css"):
+                css[name] = f.read().decode("utf-8", "replace")
+            elif name.endswith(".woff2"):
+                woff2[name.split("files/", 1)[-1]] = f.read()
+    return css, woff2
+
+
+def _faces(
+    css_text: str,
+    family: str,
+    slug: str,
+    woff2: dict[str, bytes],
+    subsets: tuple[str, ...],
+) -> list[tuple[str, str, int]]:
+    """Rewrite @font-face blocks to embed their woff2 as data: URIs."""
+    out: list[tuple[str, str, int]] = []
+    # Longest first, so `latin-ext` is not swallowed by `latin`.
+    ordered = sorted(subsets, key=len, reverse=True)
+    for block in FACE_RE.findall(css_text):
+        m = re.search(r"url\(\./files/([^)]+\.woff2)\)", block)
+        if not m:
+            continue
+        fname = m.group(1)
+        rest = fname[len(slug) + 1 :] if fname.startswith(slug + "-") else fname
+        subset = next((s for s in ordered if rest.startswith(s + "-")), None)
+        if subset is None:
+            continue
+        data = woff2.get(fname)
+        if not data:
+            continue
+        uri = "data:font/woff2;base64," + base64.b64encode(data).decode("ascii")
+        b = re.sub(
+            r"src:\s*url\([^)]*\)\s*format\([^)]*\)",
+            "src: url({}) format('woff2')".format(uri),
+            block,
+        )
+        b = re.sub(r"font-family:\s*['\"][^'\"]*['\"]", "font-family: '{}'".format(family), b)
+        out.append((fname, b, len(data)))
+    return out
+
+
+def _family_faces(
+    family: str, subsets: tuple[str, ...], cache: Path
+) -> tuple[list[str], int, str | None]:
+    """Return (css blocks, embedded bytes, error). Prefers the variable package.
+
+    A variable package ships several CSS files covering the *same* glyphs by a
+    different axis (`wght.css`, `standard.css`, `full.css`). They are
+    alternatives, not additions — taking more than one embeds the family twice.
+    Static packages are the opposite case: each weight file is a distinct face
+    and all of them are wanted.
+    """
+    slug = _slug(family)
+
+    tgz = _find_tgz("@fontsource-variable/" + slug, cache)
+    if tgz:
+        css, woff2 = _read_pkg(tgz)
+        for upright, italic in (
+            ("wght.css", "wght-italic.css"),
+            ("standard.css", "standard-italic.css"),
+            ("full.css", "full-italic.css"),
+            ("index.css", None),
+        ):
+            if upright not in css:
+                continue
+            blocks = _faces(css[upright], family, slug, woff2, subsets)
+            if italic and italic in css:
+                blocks += _faces(css[italic], family, slug, woff2, subsets)
+            if blocks:
+                return [b for _f, b, _n in blocks], sum(n for _f, _b, n in blocks), None
+
+    tgz = _find_tgz("@fontsource/" + slug, cache)
+    if tgz:
+        css, woff2 = _read_pkg(tgz)
+        seen: set[str] = set()
+        blocks: list[tuple[str, str, int]] = []
+        for name in ("400.css", "500.css", "600.css", "700.css",
+                     "400-italic.css", "700-italic.css"):
+            if name not in css:
+                continue
+            for f, b, n in _faces(css[name], family, slug, woff2, subsets):
+                if f not in seen:
+                    seen.add(f)
+                    blocks.append((f, b, n))
+        if blocks:
+            return [b for _f, b, _n in blocks], sum(n for _f, _b, n in blocks), None
+
+    return [], 0, "no Fontsource package for {!r} (tried @fontsource-variable/{} and " \
+                  "@fontsource/{})".format(family, slug, slug)
+
+
+def font_face_css(
+    families: list[str], subsets: tuple[str, ...], font_dir: Path | None
+) -> str:
+    """@font-face rules embedding `families`, or "" if none could be fetched."""
+    # Without this, a missing npm reports as "no Fontsource package for 'Google
+    # Sans'" once per family — which reads as a wrong family name and sends the
+    # reader off checking spellings instead of installing node.
+    if font_dir is None and shutil.which("npm") is None:
+        print(
+            "warning: npm not found, so the deck's fonts cannot be self-hosted — "
+            "the PDF will use whatever the page loaded (the CDN, if reachable). "
+            "Either install node, or fetch the tarballs elsewhere with "
+            "`npm pack @fontsource-variable/<family>` and pass --font-dir. "
+            "--no-embed-fonts skips this step silently.",
+            file=sys.stderr,
+        )
+        return ""
+
+    blocks: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="s2pfonts-") as tmp:
+        cache = font_dir if font_dir else Path(tmp)
+        for fam in families:
+            got, size, err = _family_faces(fam, subsets, cache)
+            if err:
+                print("warning: {} — it will use whatever the page loaded".format(err),
+                      file=sys.stderr)
+                continue
+            blocks += got
+            print("embedded {} ({} face(s), {:.0f} KB)".format(fam, len(got), size / 1024),
+                  file=sys.stderr)
+    return "\n".join(blocks)
+
+
 def render_slides(
     html: Path,
     width: int,
@@ -223,6 +446,9 @@ def render_slides(
     theme: str,
     timeout_ms: int,
     browser_path: str | None = None,
+    embed_fonts: bool = True,
+    subsets: tuple[str, ...] = DEFAULT_SUBSETS,
+    font_dir: Path | None = None,
 ) -> list[tuple[bytes, str]]:
     """Return one (single-page PDF bytes, slide title) tuple per slide."""
     css = PRINT_CSS.replace("WIDTH", str(width)).replace("HEIGHT", str(height))
@@ -265,6 +491,15 @@ def render_slides(
             )
 
         page.add_style_tag(content=css)
+
+        # Self-host the deck's own families before anything is rendered, so the
+        # PDF does not depend on the CDN having answered. Injected after the
+        # deck's own <link>, so these faces win where both exist — same glyphs
+        # either way, since it is the same family from the same upstream.
+        if embed_fonts:
+            faces = font_face_css(page.evaluate(FAMILIES_JS), subsets, font_dir)
+            if faces:
+                page.add_style_tag(content=faces)
 
         # Google Fonts come off a CDN. Wait for them, but degrade to fallback
         # families rather than failing the whole conversion when offline.
@@ -417,6 +652,24 @@ def main() -> None:
         "$PLAYWRIGHT_CHROMIUM_PATH; otherwise a Puppeteer cache and the usual "
         "Chrome/Chromium/Edge install paths are probed.",
     )
+    ap.add_argument(
+        "--no-embed-fonts",
+        dest="embed_fonts",
+        action="store_false",
+        help="do not self-host the deck's fonts; use whatever the page loads "
+        "from the CDN (the PDF then depends on that CDN being reachable)",
+    )
+    ap.add_argument(
+        "--font-subsets",
+        default=",".join(DEFAULT_SUBSETS),
+        help="comma-separated subsets to embed (default: %(default)s)",
+    )
+    ap.add_argument(
+        "--font-dir",
+        type=Path,
+        help="directory of pre-fetched @fontsource *.tgz tarballs, for a host "
+        "with no npm registry access",
+    )
     args = ap.parse_args()
 
     if not args.html.is_file():
@@ -435,6 +688,9 @@ def main() -> None:
         args.theme,
         args.timeout,
         find_browser(args.browser_path),
+        args.embed_fonts,
+        tuple(s.strip() for s in args.font_subsets.split(",") if s.strip()),
+        args.font_dir,
     )
     merge(slides, out_path)
 

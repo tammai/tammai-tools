@@ -64,6 +64,14 @@ If anything is missing, install it:
 python3 -m pip install playwright pypdf && python3 -m playwright install chromium
 ```
 
+**Check for an existing browser before running `playwright install chromium`:**
+
+```bash
+ls -d ~/.cache/puppeteer/*/*/*/ /Applications/Google\ Chrome.app 2>/dev/null | head
+```
+
+If that finds anything, skip the browser download entirely — the script's probe (below) will pick it up. This ordering matters on a sandboxed host: `playwright install chromium` pulls from `playwright.azureedge.net`, which Claude Cowork blocks, and the failure presents as a stalled ~130 MB download rather than a refusal. Spending a minute on a download that cannot succeed, then falling back, is the slow path through a problem the probe answers immediately.
+
 `playwright install chromium` downloads a ~130 MB browser on first run. Tell the user this is happening — it takes a minute and looks like a hang otherwise. If the environment blocks `pip` (a managed/externally-managed Python), fall back to a venv:
 
 ```bash
@@ -117,6 +125,28 @@ Omit `-o` and the output lands next to the input with a `.pdf` extension. Progre
 | `--keep-ui` | off | The user explicitly wants on-screen chrome (navigator, theme/fullscreen toggles) visible in the PDF |
 | `--theme` | `as-is` | The deck has a dark/light toggle and the user wants a specific mode — e.g. `--theme light` for a printer-friendly version |
 | `--timeout` | `30000` | Slow network or a very large deck |
+| `--no-embed-fonts` | off (fonts *are* embedded) | Rarely — only to reproduce the old CDN-dependent behaviour, or if npm is unavailable and its warning is noise |
+| `--font-subsets` | `latin,latin-ext,vietnamese` | A deck in a script none of those cover (Cyrillic, Greek, CJK) |
+| `--font-dir` | — | No npm registry access: point at pre-fetched `npm pack` tarballs |
+
+### Fonts are embedded by default
+
+The deck keeps its Google Fonts `<link>` — correct for an interactive page. A PDF cannot rely on that: it is a snapshot of whatever rendered, so a blocked or slow CDN is baked in **permanently and silently**, and the PDF simply *is* the fallback font with nothing to re-try later. Claude Cowork blocks `fonts.googleapis.com` outright, which is exactly this case.
+
+So before rendering, the script reads the families off the live page (`--brand-font-*`, so a preset's fonts are picked up too), fetches the matching woff2 from npm's `@fontsource*` packages, and injects them as `data:` URI `@font-face` rules. Nothing is written to the deck — the same contract as every other override here. npm is used because it stays reachable in sandboxes that block Google's CDN.
+
+Measured on the 15-slide reference deck, with the font CDN made unresolvable:
+
+| Export | Page 1 vs the online-CDN render |
+|---|---|
+| Embedded (default) | **0.19%** of pixels differ — same typography |
+| `--no-embed-fonts` | **2.64%** of pixels differ — fallback font |
+
+It adds ~1 s and 177 KB of woff2 (Google Sans latin/latin-ext/vietnamese × upright+italic, Fira Code latin/latin-ext). It prefers each family's *variable* package, so weights 400–700 come from one file per subset rather than four static faces.
+
+**Do not drop `vietnamese` from the subsets for a Vietnamese deck.** Without it the diacritics alone fall out of the embedded face and the browser substitutes a system font for those glyphs only — the slide then renders in two typefaces at once, which is harder to spot than a wholesale fallback.
+
+If a family has no Fontsource package, the script warns and continues with whatever the page loaded; it never fails the export over fonts. One caveat worth passing on: `@fontsource-variable/google-sans` is new (published July 2026, from the Fontsource maintainers, declaring OFL-1.1), and Google Sans was historically Google-proprietary — confirm the licence before distributing PDFs that embed it. Fira Code, DM Sans and the other open families raise no such question.
 
 ## Step 4 — Verify before reporting
 
@@ -139,7 +169,9 @@ Expect `960.0 x 540.0` pt for the default 1280×720. Then report the real number
 
 **`← OVERLAP (svg 132px past its column)` in the output** — a *different* failure from clipping, and the reason the two are reported separately. Nothing is cropped here: `.col` is `overflow: visible`, so an oversized child paints over whatever sits in the next column while the slide's own `scrollWidth` stays unchanged — the slide-level measurement above cannot see it. The usual cause is an `<svg>` with `width`/`height` attributes and no `class="diagram"`; adding that class constrains it to the column. Relay this too: the PDF looks structurally fine while two columns are drawn on top of each other.
 
-**Fonts look wrong / fell back to a system sans** — the deck loads Google Fonts from a CDN, so conversion needs network access. The script warns on `stderr` and continues rather than failing. Re-run when online, or accept the fallback.
+**Fonts look wrong / fell back to a system sans** — first read the export log. `embedded Google Sans (6 face(s), 129 KB)` means the fonts were self-hosted and the PDF is fine regardless of the CDN. If instead you see `no Fontsource package for …`, that family is not on npm under its own name (check the spelling of the preset's `fontMain`), and the PDF used whatever the page had. If npm itself is missing or blocked, fetch the tarballs on a machine that has it (`npm pack @fontsource-variable/<family>`) and pass `--font-dir`. `--no-embed-fonts` is the only way to get the old CDN-dependent behaviour, and offline it gives a fallback font.
+
+Note the deck's *interactive* view is unaffected either way: it still uses the CDN, so a deck generated in a sandbox looks wrong on screen while exporting correctly. That split is deliberate — see the workshop-slides skill.
 
 **Backgrounds print white** — something dropped `printBackground` or the `print-color-adjust: exact` override. Both are set by the script; don't reimplement the export with a bare `chromium --print-to-pdf` CLI call, which cannot isolate slides and loses the per-slide loop entirely.
 

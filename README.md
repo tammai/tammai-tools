@@ -31,7 +31,7 @@ Generates a complete, self-contained HTML slide deck from a topic, outline, or d
 | Branding | Fully themeable via CSS variables; presets saved to `~/.workshop-slides-preset.json` |
 | PDF | `@media print` for Cmd-P, or the `slides-to-pdf` skill for a higher-fidelity export |
 
-**Default brand:** dark slate (`#020617`) + orange accent (`#f97316`), Google Sans for headings and body, JetBrains Mono for code only, BigIn watermark.
+**Default brand:** dark slate (`#020617`) + orange accent (`#f97316`), Google Sans for headings and body, Fira Code for code only, BigIn watermark.
 
 ### `slides-to-pdf`
 

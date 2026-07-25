@@ -68,14 +68,14 @@ Use `AskUserQuestion` to present exactly **two** choices:
 
 | Option | Label | Description |
 |---|---|---|
-| A | Use BigIn preset | Dark slate + orange accent, Google Sans throughout, JetBrains Mono for code, BigIn watermark. Ready now. |
+| A | Use BigIn preset | Dark slate + orange accent, Google Sans throughout, Fira Code for code, BigIn watermark. Ready now. |
 | B | Create my own preset | Define your brand colors, fonts, and logo — saved for all future decks. |
 
 **If a saved preset exists** (read the `name` field from the JSON):
 
 | Option | Label | Description |
 |---|---|---|
-| A | Use BigIn preset | Dark slate + orange accent, Google Sans throughout, JetBrains Mono for code, BigIn watermark. |
+| A | Use BigIn preset | Dark slate + orange accent, Google Sans throughout, Fira Code for code, BigIn watermark. |
 | B | Use my "[name]" preset | Show the saved accent color and font names from the JSON file. |
 
 Include a third option in the saved-preset case: **"Update my preset"** — re-collect all fields and overwrite the saved file.
@@ -126,7 +126,7 @@ If the user selects "Other", ask them to type a hex code.
 
 Present each as: label = scale name + shade (e.g. "Slate 950"), description = hex value. If the user selects "Other", ask them to type a hex code.
 
-**Heading font** — `Inter`, `Poppins`, `Plus Jakarta Sans` (or custom).
+**Heading font** — `Google Sans`, `Poppins`, `Plus Jakarta Sans` (or custom).
 
 **Body font** — `DM Sans`, `Outfit`, `Nunito` (or custom).
 
@@ -141,15 +141,17 @@ After collecting, **save** to `~/.workshop-slides-preset.json`:
   "name": "My Company",
   "accent": "#6366f1",
   "background": "#0a0a0a",
-  "fontMain": "Inter",
+  "fontMain": "Google Sans",
   "fontBody": "DM Sans",
   "fontCode": "Fira Code",
-  "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=DM+Sans:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap",
+  "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=DM+Sans:wght@400;500;600&family=Fira+Code:wght@400&display=swap",
   "watermark": "<img src='https://example.com/logo.svg' alt='My Company'>"
 }
 ```
 
 Set `"watermark": ""` if the user chose no logo.
+
+If `$HOME` is not writable or not persisted (sandboxed hosts such as Claude Cowork), the save silently buys nothing — the next session starts with no preset. Don't quietly drop the file into the output folder instead: pass the preset to `build.py` for this deck, and tell the user the preset could not be persisted and will need re-entering, or ask them to keep the JSON somewhere they control.
 
 ### 4. Inject branding into the template
 
@@ -160,7 +162,7 @@ When applying any non-BigIn preset, update the template:
 :root {
   --brand-accent:    #6366f1;
   --brand-bg:        #0a0a0a;
-  --brand-font-main: 'Inter', system-ui, sans-serif;
+  --brand-font-main: 'Google Sans', system-ui, sans-serif;
   --brand-font-body: 'DM Sans', sans-serif;
   --brand-font-code: 'Fira Code', monospace;
 }
@@ -195,10 +197,12 @@ Writing the whole deck out by hand makes rule 1 aspirational, and it **measurabl
 So write **only the slides** to a fragment file, and let the script carry the other ~65 KB across as bytes:
 
 ```bash
-python3 assets/build.py assets/template.html slides-fragment.html out/my-deck.html
+python3 assets/build.py assets/template.html "$TMPDIR/slides-fragment.html" out/my-deck.html
 ```
 
 `slides-fragment.html` holds just the `<section class="slide">` elements — no `<head>`, no `#deck` wrapper. Standard library only, so there is nothing to install.
+
+**Write the fragment outside the deliverable folder**, as above — not into the working directory. The fragment is scaffolding, not output. In a sandboxed host (Claude Cowork) the working directory *is* the user-visible `outputs/` folder, so a bare relative path ships build scrap next to the deck: an observed run left `slides-fragment.html` and four `pgN.png` verification rasters sitting beside the `.html` and `.pdf`, and the sandbox could not delete them afterwards. The same applies to anything else generated along the way — page rasters, thumbnails, a preset written for this deck only. Put them in `$TMPDIR` (or any scratch path) and delete them once the deck verifies. Only the deck itself, and a PDF if one was asked for, belong in the output folder.
 
 For a non-BigIn preset, pass it in rather than editing the head yourself. The script substitutes the individual `--brand-*` declarations, the Google Fonts `href`, and the watermark block, leaving their explanatory comments intact:
 
@@ -208,6 +212,14 @@ python3 assets/build.py assets/template.html slides-fragment.html out/my-deck.ht
 ```
 
 `"watermark": ""` in the preset removes the whole `#watermark` block, as specified above.
+
+### Fonts: the deck uses the CDN, the PDF embeds
+
+Leave the Google Fonts `<link>` alone. **The deck loads its fonts from the CDN** — that keeps the `.html` small and lets viewers hit Google's cache — and `build.py` has no font-embedding mode by design.
+
+The PDF is the case that cannot work that way: it is a snapshot of whatever rendered at export time, so a blocked or slow CDN is baked in permanently, with nothing to re-try later. `slides-to-pdf` therefore self-hosts the same families *at export time only*, injected at runtime, deck untouched. It is the default there; see that skill for details. This matters in a sandboxed host such as Claude Cowork, where `fonts.googleapis.com` is blocked outright.
+
+So if a deck generated in Cowork looks like it is in the wrong font on screen, that is expected and only affects the interactive view — the exported PDF still carries the real typography.
 
 The script refuses to write on a structural error (no `active` slide, or more than one) and warns without blocking on: numbering that does not match slide position, hardcoded hex colors (which break light mode), a `<button>` in slide content (which `slides-to-pdf` cannot strip), a `.code-block` with no `.code-line` children (which collapses the snippet into one line), and a preset watermark pointing at a remote URL or a local file path (either one renders as a broken-image box once the deck travels, offline or after the URL rots — prefer inline `<svg>` or a `data:` URI). It also verifies the carried-over head still contains the `--dg-*` tokens, `.diagram`, `@media print`, `scaleDeck`, `--deck-scale`, `ResizeObserver`, the three toggles, and the favicon.
 
