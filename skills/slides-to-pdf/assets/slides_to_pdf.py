@@ -145,12 +145,44 @@ SELECT_SLIDE_JS = """(index) => {
     }
   }
 
+  // A third, independent failure: content outside an <svg>'s own viewBox is
+  // not clipped with any signal — it is simply never drawn. A deck shipped on
+  // 2026-07-25 had a seven-card stack running to y=308 inside
+  // viewBox="0 0 460 306", so exactly one card lost its bottom border and
+  // rounded corners while the six above kept theirs. Invisible in the browser,
+  // invisible in the PDF, and neither measurement above can see it: the slide
+  // does not overflow and the column does not overlap. getBBox() is exact here,
+  // including curves, transforms and text runs that no static check can size.
+  // Note getBBox() excludes stroke width, so a 2.9px overflow of a 1.75px
+  // stroked edge measures as 2.0 — the tolerance stays low for that reason.
+  let svgClip = null;
+  for (const s of el.querySelectorAll('svg[viewBox]')) {
+    const vb = s.viewBox.baseVal;
+    if (!vb || !vb.width || !vb.height) continue;
+    let b;
+    try { b = s.getBBox(); } catch (e) { continue; }
+    if (!b.width && !b.height) continue;
+    const worst = Math.max(
+      b.x + b.width - (vb.x + vb.width),
+      b.y + b.height - (vb.y + vb.height),
+      vb.x - b.x,
+      vb.y - b.y,
+    );
+    if (worst > 1 && (!svgClip || worst > svgClip.px)) {
+      svgClip = {
+        px: Math.round(worst * 10) / 10,
+        vb: Math.round(vb.width) + 'x' + Math.round(vb.height),
+      };
+    }
+  }
+
   // The slide is pinned to the page box inside an overflow:hidden body, so
   // content that does not fit is silently cropped rather than pushed onto a
   // second PDF page. Measure it instead of trusting the page count.
   return {
     title,
     overlap,
+    svgClip,
     overflowY: Math.max(0, el.scrollHeight - el.clientHeight),
     overflowX: Math.max(0, el.scrollWidth - el.clientWidth),
   };
@@ -520,6 +552,7 @@ def render_slides(
 
         clipped: list[str] = []
         overlapping: list[str] = []
+        svg_clipped: list[str] = []
 
         for i in range(total):
             info = page.evaluate(SELECT_SLIDE_JS, i)
@@ -558,6 +591,16 @@ def render_slides(
                         i + 1, title or "untitled", ov["el"], ov["px"]
                     )
                 )
+            # Nothing cropped at the slide level, nothing overlapping — the
+            # loss is inside the SVG's own coordinate system.
+            sc = info.get("svgClip")
+            if sc:
+                note += f"  ← SVG OUTSIDE VIEWBOX ({sc['px']:g}px, viewBox {sc['vb']})"
+                svg_clipped.append(
+                    "slide {} ({}): content reaches {:g}px outside a viewBox {}".format(
+                        i + 1, title or "untitled", sc["px"], sc["vb"]
+                    )
+                )
             print(
                 f"  [{i + 1}/{total}] {title or '(untitled)'}{note}", file=sys.stderr
             )
@@ -587,6 +630,22 @@ def render_slides(
         print(
             '  Usually an <svg> with width/height attributes and no class="diagram";'
             "\n  adding that class constrains it to the column.",
+            file=sys.stderr,
+        )
+
+    if svg_clipped:
+        print(
+            "\nwarning: an <svg> draws outside its own viewBox — that part is not "
+            "rendered at all, in the deck or the PDF:",
+            file=sys.stderr,
+        )
+        for line in svg_clipped:
+            print(f"  - {line}", file=sys.stderr)
+        print(
+            "  Grow the viewBox to cover the shapes (mind that a stroke straddles\n"
+            "  the edge it sits on, so it needs ~half the stroke width beyond them),\n"
+            "  or move the content inside. Typical symptom: the last row of cards\n"
+            "  loses its bottom border while the rows above keep theirs.",
             file=sys.stderr,
         )
 

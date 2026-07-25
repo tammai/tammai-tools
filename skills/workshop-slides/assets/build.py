@@ -237,6 +237,159 @@ def check_slides(slides: str) -> tuple[list[str], list[str], int]:
     return errors, warnings, count
 
 
+# Own coordinate systems, or never rendered in place — their coordinates say
+# nothing about the parent viewBox. A `<marker>` in particular carries its own
+# `viewBox`, and missing this reads every arrowhead as a wild overflow.
+SVG_ISOLATED_BLOCKS = ("defs", "marker", "clipPath", "pattern", "symbol", "mask")
+
+
+def _svg_extent(body: str) -> tuple[float, float, str] | None:
+    """Furthest right/bottom edge of the shapes whose geometry is exactly known.
+
+    Deliberately partial. Anything whose extent cannot be computed from
+    attributes alone — a transformed element, a relative or curved path, the
+    *width* of a text run — is skipped rather than guessed at, because a check
+    that cries wolf on the reference deck gets ignored and then removed. What
+    remains still catches the common authoring slip: a row of `<rect>` cards
+    laid out past the bottom of the viewBox.
+    """
+    for block in SVG_ISOLATED_BLOCKS:
+        body = re.sub(r"<{0}\b.*?</{0}>".format(block), "", body, flags=re.DOTALL | re.IGNORECASE)
+
+    # A translated group shifts everything under it; without a transform stack
+    # every child coordinate would be wrong. Bail out rather than mislead.
+    if re.search(r"<g\b[^>]*\btransform\s*=", body, re.IGNORECASE):
+        return None
+
+    def attrs(tag: str) -> list[dict[str, str]]:
+        out = []
+        for m in re.finditer(r"<" + tag + r"\b([^>]*)>", body, re.IGNORECASE):
+            raw = m.group(1)
+            if re.search(r"\btransform\s*=", raw):
+                continue
+            out.append(dict(re.findall(r'([a-zA-Z-]+)\s*=\s*["\']([^"\']*)["\']', raw)))
+        return out
+
+    def num(d: dict[str, str], key: str, default: float = 0.0) -> float:
+        try:
+            return float(d.get(key, default))
+        except (TypeError, ValueError):
+            return default
+
+    def pad(d: dict[str, str]) -> float:
+        # A stroke straddles the edge it is drawn on, so half of it sits outside
+        # the shape's own box — the 1.75px stroke on a card at y+38 puts real ink
+        # at y+38.875. Ignoring it is how a "2px" overflow reads as none.
+        if d.get("stroke", "none") in ("none", ""):
+            return 0.0
+        return num(d, "stroke-width", 1.0) / 2.0
+
+    right = bottom = float("-inf")
+    who = ""
+
+    def bump(x: float, y: float, label: str) -> None:
+        nonlocal right, bottom, who
+        if x > right or y > bottom:
+            if max(x - right, y - bottom) > 0:
+                who = label
+            right = max(right, x)
+            bottom = max(bottom, y)
+
+    for d in attrs("rect"):
+        p = pad(d)
+        bump(num(d, "x") + num(d, "width") + p, num(d, "y") + num(d, "height") + p, "<rect>")
+    for d in attrs("circle"):
+        p = pad(d) + num(d, "r")
+        bump(num(d, "cx") + p, num(d, "cy") + p, "<circle>")
+    for d in attrs("ellipse"):
+        p = pad(d)
+        bump(num(d, "cx") + num(d, "rx") + p, num(d, "cy") + num(d, "ry") + p, "<ellipse>")
+    for d in attrs("line"):
+        p = pad(d)
+        bump(max(num(d, "x1"), num(d, "x2")) + p, max(num(d, "y1"), num(d, "y2")) + p, "<line>")
+    for tag in ("polyline", "polygon"):
+        for d in attrs(tag):
+            pts = [float(v) for v in re.findall(r"-?\d+(?:\.\d+)?", d.get("points", ""))]
+            if len(pts) >= 2:
+                p = pad(d)
+                bump(max(pts[0::2]) + p, max(pts[1::2]) + p, "<{}>".format(tag))
+    for d in attrs("path"):
+        dd = d.get("d", "")
+        # Absolute straight-line paths only: M/L/Z give clean x,y pairs. A
+        # relative or curved path needs a real path parser, and a wrong answer
+        # here is worse than no answer.
+        if not dd or re.search(r"[a-z]", dd) or re.search(r"[CSQTAHV]", dd):
+            continue
+        pts = [float(v) for v in re.findall(r"-?\d+(?:\.\d+)?", dd)]
+        if len(pts) >= 2:
+            p = pad(d)
+            bump(max(pts[0::2]) + p, max(pts[1::2]) + p, "<path>")
+
+    if right == float("-inf"):
+        return None
+    return right, bottom, who
+
+
+def check_svg_viewbox(slides: str) -> list[str]:
+    """Warn when an <svg>'s own shapes reach past its viewBox.
+
+    Content outside the viewBox is not clipped with a red flag — it is simply
+    not drawn. A deck shipped on 2026-07-25 had a seven-card layer stack whose
+    last card ran to y=308 inside `viewBox="0 0 460 306"`, so that one card lost
+    its bottom border and rounded corners while the other six kept theirs. It
+    rendered that way in the browser and in the exported PDF, silently. The
+    `soft-visuals` skill has documented a DevTools snippet for this since v0.2 —
+    which is exactly the problem: a check nobody runs catches nothing.
+    """
+    warnings: list[str] = []
+
+    # Comments first. Both this template and the soft-visuals one *mention*
+    # `<svg>` in prose — one inside a CSS comment, one inside an HTML comment —
+    # and a naive `<svg…>(.*?)</svg>` pairs that prose opening with the real
+    # diagram's closing tag, hiding the actual diagram inside another match's
+    # body. That made an earlier version of this check silently never fire on any
+    # deck built from the template: the worst kind of check.
+    text = re.sub(r"<!--.*?-->", "", slides, flags=re.DOTALL)
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
+
+    # Each opening is resolved against the next `</svg>` independently, rather
+    # than by one alternating pattern, so an unclosed or attribute-less <svg>
+    # cannot consume the one after it. A nested <svg> only truncates the outer
+    # body, which under-measures — safe, never a false alarm.
+    for m in re.finditer(r"<svg\b([^>]*)>", text, re.IGNORECASE):
+        head = m.group(1)
+        close = text.find("</svg>", m.end())
+        body = text[m.end() : close if close != -1 else len(text)]
+        vb = re.search(r'viewBox\s*=\s*["\']\s*([-\d.]+)[,\s]+([-\d.]+)[,\s]+([-\d.]+)[,\s]+([-\d.]+)', head)
+        if not vb:
+            continue
+        vx, vy, vw, vh = (float(vb.group(i)) for i in range(1, 5))
+        if vw <= 0 or vh <= 0:
+            continue
+        ext = _svg_extent(body)
+        if not ext:
+            continue
+        right, bottom, who = ext
+        over_x, over_y = right - (vx + vw), bottom - (vy + vh)
+        # 0.5 of slack: half-pixel rounding in generated coordinates is not a bug.
+        if over_x > 0.5 or over_y > 0.5:
+            parts = []
+            if over_x > 0.5:
+                parts.append("{:.3g}px past its right edge".format(over_x))
+            if over_y > 0.5:
+                parts.append("{:.3g}px below its bottom edge".format(over_y))
+            warnings.append(
+                'svg viewBox="{:g} {:g} {:g} {:g}" — {} reaches {}. Content outside '
+                "the viewBox is not drawn at all: that edge is silently missing in "
+                "the deck and in any PDF. Grow the viewBox to {:g} {:g} (or move the "
+                "shape in)".format(
+                    vx, vy, vw, vh, who or "content", " and ".join(parts),
+                    vw + max(0.0, over_x) + 6, vh + max(0.0, over_y) + 6,
+                )
+            )
+    return warnings
+
+
 def check_carryover(template: str, output: str) -> list[str]:
     """Canary for head/chrome drift: anything here missing means the carry-over
     broke, which is exactly the failure this script exists to prevent."""
@@ -304,6 +457,7 @@ def main() -> int:
         fail("{!r} appears before {!r}".format(DECK_CLOSE, DECK_OPEN))
 
     errors, warnings, count = check_slides(slides)
+    warnings += check_svg_viewbox(slides)
 
     head = template[: open_at + len(DECK_OPEN)]
     tail = template[close_at:]

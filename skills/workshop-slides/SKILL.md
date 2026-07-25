@@ -221,7 +221,15 @@ The PDF is the case that cannot work that way: it is a snapshot of whatever rend
 
 So if a deck generated in Cowork looks like it is in the wrong font on screen, that is expected and only affects the interactive view — the exported PDF still carries the real typography.
 
-The script refuses to write on a structural error (no `active` slide, or more than one) and warns without blocking on: numbering that does not match slide position, hardcoded hex colors (which break light mode), a `<button>` in slide content (which `slides-to-pdf` cannot strip), a `.code-block` with no `.code-line` children (which collapses the snippet into one line), and a preset watermark pointing at a remote URL or a local file path (either one renders as a broken-image box once the deck travels, offline or after the URL rots — prefer inline `<svg>` or a `data:` URI). It also verifies the carried-over head still contains the `--dg-*` tokens, `.diagram`, `@media print`, `scaleDeck`, `--deck-scale`, `ResizeObserver`, the three toggles, and the favicon.
+The script refuses to write on a structural error (no `active` slide, or more than one) and warns without blocking on: numbering that does not match slide position, hardcoded hex colors (which break light mode), a `<button>` in slide content (which `slides-to-pdf` cannot strip), a `.code-block` with no `.code-line` children (which collapses the snippet into one line), a preset watermark pointing at a remote URL or a local file path (either one renders as a broken-image box once the deck travels, offline or after the URL rots — prefer inline `<svg>` or a `data:` URI), and **an `<svg>` whose shapes reach past its own `viewBox`** (that edge is simply never drawn — see below). It also verifies the carried-over head still contains the `--dg-*` tokens, `.diagram`, `@media print`, `scaleDeck`, `--deck-scale`, `ResizeObserver`, the three toggles, and the favicon.
+
+### Size the `viewBox` from the shapes, not by eye
+
+When you write or paste an `<svg>`, the `viewBox` must cover every shape in it. **Content outside the viewBox is not clipped with any signal — it is simply never drawn**, in the browser and in the exported PDF alike.
+
+This shipped in a real deck: a seven-card layer stack whose last card ran to `y=308` inside `viewBox="0 0 460 306"`. That one card lost its bottom border and rounded corners while the six above it kept theirs, and nothing reported it — the slide did not overflow, the columns did not collide, the PDF had the right page count.
+
+Add up the coordinates: the furthest shape edge, **plus half its stroke width** (a stroke straddles the edge it is drawn on, so a 1.75px-stroked card ending at `y=308` puts ink at `308.875`), plus a small margin. `build.py` now warns when it can prove an overflow from the attributes, and `slides-to-pdf` measures it exactly with `getBBox()` at export time — but the cheapest fix is getting it right when you write the shape.
 
 **If you cannot run the script** (no shell access to this directory), assemble by hand — then verify the output before handing it over, because this is exactly where decks break:
 

@@ -228,6 +228,8 @@ Then check the two things that silently break a visual:
    `id="aFlow"`; duplicate ids are invalid and both references resolve to the first.
    Suffix them (`aFlow`, `aArch`, `aSeqRet`).
 
+Rule 1 is now also enforced downstream, which is the only reason it stops mattering how diligent you were: `workshop-slides/assets/build.py` warns when a shape's attributes prove an overflow, and `slides-to-pdf` measures every `<svg>` with `getBBox()` at export and reports `SVG OUTSIDE VIEWBOX`. Both were added after a deck shipped with a card cut off — a documented manual check catches nothing if nobody runs it. Getting the coordinates right here is still the cheap fix; those two are the backstop.
+
 Paste this in DevTools to check both at once:
 
 ```js

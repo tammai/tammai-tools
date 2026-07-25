@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-07-25
+
+### Added
+- **An `<svg>` drawing outside its own `viewBox` is now caught mechanically, in both tools.** Content past the viewBox is not clipped with any signal — it is never drawn. A deck shipped this morning had a seven-card layer stack running to `y=308` inside `viewBox="0 0 460 306"`: exactly one card lost its bottom border and rounded corners while the six above kept theirs, in the browser *and* the exported PDF. Nothing reported it, and nothing could — the slide did not overflow its page box and no column overlapped, so both existing checks correctly returned zero. `soft-visuals/SKILL.md` has carried a DevTools snippet for this since v0.2, which is the whole lesson: a check nobody runs catches nothing
+- `build.py` gains `check_svg_viewbox()` — warns at assembly time, from attributes alone, no browser needed. Reports which shape overflowed, by how much, and the viewBox size to grow to
+- `slides-to-pdf` measures every `<svg>` with `getBBox()` during the export it already runs, reporting `← SVG OUTSIDE VIEWBOX (2px, viewBox 460x306)` per slide plus a summary. Exact where the static check is approximate: it sees curves, transforms and text runs
+
+### Fixed
+- The static check is deliberately partial — transformed elements, relative and curved paths, and text *width* are skipped rather than estimated, on the same principle as the rest of this script: a check that misfires on the reference deck gets ignored and then deleted. Verified firing on the real bad deck and **silent across eight known-good files** (both skills' templates, both `demo.html`, the gallery, and two shipped decks)
+- Two traps found by testing rather than reasoning, both now handled. Both templates *mention* `<svg>` in prose — one inside a CSS comment, one inside an HTML comment — and a naive `<svg…>(.*?)</svg>` pairs that prose opening with the real diagram's closing tag, burying the diagram inside another match's body. The first version of this check therefore fired on the isolated SVG but **silently never fired on any deck built from the template**. Comments are stripped first, and each `<svg>` opening is now resolved against the next `</svg>` independently
+- `getBBox()` excludes stroke width, so a 2.875px overflow of a 1.75px-stroked edge measures as 2.0. The runtime tolerance accounts for it and both `SKILL.md` and `CLAUDE.md` now say the reported number is a floor, not the exact overflow
+
 ## [0.4.0] — 2026-07-25
 
 ### Added
