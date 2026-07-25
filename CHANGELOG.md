@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.3] — 2026-07-25
+
+### Changed
+- Font request trimmed from `JetBrains+Mono:wght@400;500` to `wght@400` — nothing in either skill ever used mono at 500. Verified rather than assumed: all 65 mono-rendered elements in `workshop-slides/demo.html` compute to weight 400, no rule sets a weight on `.code-block`, `code` or their descendants, and in `soft-visuals` the two mono selectors (`.figure-note code`, `.shape-cell figcaption code`) inherit 400 — the four `font-weight` declarations there apply to `.kicker`, `h1`, `.figure-label` and `.figure-group-title`, none of which is a mono ancestor. Applied to all five files carrying the `<link>`: both skills' `assets/template.html`, both `demo.html`, and `soft-visuals/assets/gallery.html`
+- Google Sans is untouched and still requested as a variable font over `wght 400..700`, so the 500/600/700 weights the decks use stay real instances rather than synthesised. Post-trim render is byte-for-byte equivalent: 258 Google Sans + 65 JetBrains Mono elements, same weight spread, all three faces loading
+
+### Fixed
+- **The 16:9 stage no longer loses its ratio when a deck loads inside a container that starts at zero size.** `scaleDeck()` ran once at load, hit its zero-viewport guard, fell back to `scale(1)` — and never recovered, because `resize` fires for the *window* only and nothing fires when a `display:none` container is revealed. A deck opened in a lazily-shown pane, an iframe embed or a background tab therefore rendered at a hard 1280×720 and was cropped by its container instead of fitting it. Reproduced in a 640×900 hidden-then-shown iframe: the deck stayed 1280×720 permanently; it now rescales to 640×360 on reveal. A `ResizeObserver` on `documentElement` drives the rescale, so the 1:1 fallback is now a hold rather than a dead end
+- **The ratio is also locked in CSS**, via `#deck { transform: scale(var(--deck-scale)) }` with an `@supports`-gated `min(100vw / 1280px, 100dvh / 720px)`. The lock now holds on first paint (no one-frame flash at scale 1) and survives JS being stripped; `scaleDeck()` writes the same value inline for browsers without length-÷-length `calc()`. Both paths measured identical at 1200×480 → `scale(0.6667)` → 853×480
+- `scaleDeck()` measures `documentElement.clientWidth/clientHeight` instead of `window.innerWidth/innerHeight` — the layout box the deck is actually centred in, scrollbars excluded, and on mobile the visible viewport rather than the large one
+- `html, body` height is now `100dvh` (after a `100vh` fallback line). `vh` resolves against the large viewport, so on a phone with the address bar showing the body was taller than the visible area and the vertically centred deck sat partly under the browser chrome
+- Added `visualViewport` resize handling, which pinch-zoom and mobile toolbar show/hide trigger without always firing a window `resize`
+- Applied to `skills/workshop-slides/assets/template.html` **and** the copy inside `skills/workshop-slides/demo.html`. Verified unchanged for the PDF path: at the exporter's 1280×720 viewport both drivers compute exactly `1`, and `slides-to-pdf` resets `.slide` transforms, never `#deck`'s
+
 ## [0.3.2] — 2026-07-25
 
 ### Fixed

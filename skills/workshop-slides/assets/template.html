@@ -22,7 +22,7 @@
   -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 
   <style>
     /* ╔══════════════════════════════════════════════════════════════╗
@@ -88,6 +88,10 @@
     html, body {
       width: 100vw;
       height: 100vh;
+      /* Mobile browsers resolve 100vh against the *large* viewport, so with the
+         address bar showing the body is taller than what you can see and the
+         centred deck sits partly under the chrome. dvh tracks the visible box. */
+      height: 100dvh;
       overflow: hidden;
       background: var(--brand-bg);
       color: var(--slate-100);
@@ -151,6 +155,19 @@
       flex: none;
       z-index: 1;
       transform-origin: center center;
+      /* The stage is always scaled uniformly, so 1280×720 is preserved no matter
+         what shape the viewport is. scaleDeck() overwrites --deck-scale below. */
+      --deck-scale: 1;
+      transform: scale(var(--deck-scale));
+    }
+
+    /* Ratio lock in CSS, so it holds on first paint and even with JS disabled.
+       Needs length ÷ length in calc() (CSS Values 4); where that isn't supported
+       the declaration is dropped and scaleDeck() is the only driver. */
+    @supports (transform: scale(calc(100vh / 720px))) {
+      #deck {
+        --deck-scale: min(100vw / 1280px, 100dvh / 720px);
+      }
     }
 
     .slide {
@@ -1091,19 +1108,40 @@
   const BASE_H = 720;
 
   function scaleDeck() {
+    // documentElement.clientWidth/Height, not window.innerWidth/Height: this is
+    // the CSS layout box the deck is actually centred in — scrollbars excluded,
+    // and on mobile it tracks the visible viewport rather than the large one.
+    const root = document.documentElement;
     const scale = Math.min(
-      window.innerWidth  / BASE_W,
-      window.innerHeight / BASE_H
+      root.clientWidth  / BASE_W,
+      root.clientHeight / BASE_H
     );
-    // A zero or NaN viewport — hidden iframe, snapshot renderer, or a call
-    // before first layout — would otherwise scale the deck to nothing and
-    // render a blank page. Fall back to 1:1 rather than vanishing.
-    deck.style.transform = 'scale(' + (scale > 0 ? scale : 1) + ')';
+    // A zero or NaN viewport — a display:none container, a hidden iframe, a
+    // snapshot renderer, or a call before first layout — would otherwise scale
+    // the deck to nothing and render a blank page. Hold at 1:1; the observer
+    // below re-runs this the moment the container gets a real size.
+    deck.style.setProperty('--deck-scale', scale > 0 ? scale : 1);
   }
 
   scaleDeck();
   window.addEventListener('resize', scaleDeck);
   window.addEventListener('orientationchange', scaleDeck);
+
+  // A `resize` event only fires for the *window*. A deck that loads inside a
+  // container which is zero-sized or display:none at load — a lazily-revealed
+  // pane, a background tab, an iframe embed — measures 0, falls back to 1:1 and
+  // never hears about the reveal, so it renders at a hard 1280×720 and gets
+  // cropped by the container instead of fitting it. Observing the root element
+  // catches that, plus any container resize the window never sees.
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(scaleDeck).observe(document.documentElement);
+  }
+
+  // Pinch-zoom and mobile toolbar show/hide change the visible viewport without
+  // always firing a window resize.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', scaleDeck);
+  }
 
   /* ============================================================
      SWIPE NAVIGATION — for phones/tablets without a keyboard
