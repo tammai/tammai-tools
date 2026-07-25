@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.5.0] — 2026-07-25
 
 ### Changed
 - **`slides-to-pdf` is a rewrite: one headless-Chromium command, 761 lines of Playwright driver deleted.** `assets/slides_to_pdf.py` is replaced by `assets/export.py` (329 lines, Python standard library only — no `playwright`, no required `pypdf`, no network). It copies the deck, injects a print stylesheet, and lets Chromium's own `--print-to-pdf` paginate the whole deck in one run: no per-slide loop, no merge step, no font fetching. Measured: an 8-slide fixture → 8 pages in 1.6 s, the 25-slide `wordpress-setup-slides.html` → 25 pages in 1.9 s, every page 960 × 540 pt, text extractable, no trailing blank page. Rendered to images and inspected: background, radial glows, accent, Google Sans, Vietnamese diacritics, `.code-block` colors, `.cmp-table`, `.stat-block`, tags, watermark and pasted `soft-visuals` SVGs all vector and correct
