@@ -404,20 +404,22 @@
     }
 
     /* Numbered list variant */
-    .list.numbered { counter-reset: item; padding-left: 4px; }
+    .list.numbered { counter-reset: item; padding-left: 0; }
     .list.numbered li { padding-left: 26px; }
     .list.numbered li::before {
       content: counter(item);
       counter-increment: item;
       background: none;
-      width: auto;
+      width: 16px;
       height: auto;
       top: 0;
-      line-height: inherit;
+      text-align: right;
+      line-height: calc(1.5 / 0.6);
       border-radius: 0;
       font-family: var(--brand-font-body);
-      font-size: 0.85rem;
+      font-size: 0.6em;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
       color: var(--brand-accent);
     }
 

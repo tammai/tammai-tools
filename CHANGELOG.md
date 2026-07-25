@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-07-25
+
+### Fixed
+- **Numbered list markers no longer sit above the text they label.** `.list.numbered li::before` combined a smaller `font-size` with `line-height: inherit` — a unitless inherited line-height multiplies the *marker's own* font-size, so the digit's line box was 1.28rem inside a list item whose first line box is 2.13rem. Pinned to the top of that shorter box, the number rendered like a superscript, roughly 7px above the content baseline. `line-height: calc(1.5 / 0.6)` scales the marker's line box back to the item's `1.5em`, putting the two baselines within ~1px
+- Double-digit markers no longer crowd the text. `width: auto` left-aligned the digits, so `10` and `11` grew rightward into the 26px text column while `1` sat alone; digits now hang right-aligned in a fixed 16px box with `font-variant-numeric: tabular-nums`, so the gap before the text is identical at every index
+- Marker size is unchanged in appearance but now expressed in `em` (`0.6em` × the item's `1.42rem` ≈ the previous `0.85rem`), so a per-slide font-size override keeps the marker in proportion instead of leaving it at a fixed rem
+- `.list.numbered` container padding dropped from `4px` to `0`, so numbered lists share the bulleted list's left edge
+- Applied to `skills/workshop-slides/assets/template.html` **and** the CSS copy inside `skills/workshop-slides/demo.html`. The `1.5` and `0.6` constants are derived from `.list li` — a comment in the template records that changing that rule's line-height means updating them
+
 ## [0.3.1] — 2026-07-25
 
 ### Changed
