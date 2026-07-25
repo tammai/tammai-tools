@@ -1,10 +1,21 @@
 {
   "name": "tammai-tools",
-  "version": "0.2.2",
-  "description": "A collection of workshop and presentation tools by Tam Mai. Includes a skill for generating polished HTML slide decks using the BigIn design system.",
+  "version": "0.3.0",
+  "description": "A collection of workshop and presentation tools by Tam Mai. Generate polished HTML slide decks on the BigIn design system, soft flat diagrams, wireframes and mindmaps, and export decks to print-ready PDF.",
   "author": {
     "name": "Tam Mai",
     "email": "tam.mai@bigin.vn"
   },
-  "keywords": ["workshop", "slides", "presentation", "bigin"]
+  "keywords": [
+    "workshop",
+    "slides",
+    "presentation",
+    "pdf",
+    "export",
+    "bigin",
+    "diagram",
+    "wireframe",
+    "mindmap",
+    "svg"
+  ]
 }

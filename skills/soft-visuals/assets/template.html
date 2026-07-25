@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soft Visual</title>
+
+  <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  FONTS — Google Sans (labels) · JetBrains Mono (code only)   ║
+    ╚══════════════════════════════════════════════════════════════╝
+    Requested as a variable font over wght 400..700 because the shape
+    labels use 400/500/600/700 — a fixed list leaves 600 synthesised.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ╔══════════════════════════════════════════════════════════════╗
+       ║  BRAND CONFIGURATION — edit to match your brand              ║
+       ╚══════════════════════════════════════════════════════════════╝ */
+    :root {
+      --brand-accent: #f97316;
+      --brand-bg: #020617;
+      --brand-font-main: 'Google Sans', system-ui, sans-serif;
+      --brand-font-code: 'JetBrains Mono', monospace;
+    }
+
+    /* ============================================================
+       DESIGN TOKENS — Tailwind slate scale
+    ============================================================ */
+    :root {
+      --slate-50:  #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --slate-950: #020617;
+    }
+
+    /* ============================================================
+       LIGHT MODE — reverses the slate scale + page background.
+       Toggled via [data-theme="light"] on <html>.
+    ============================================================ */
+    :root[data-theme="light"] {
+      --brand-bg:  #f8fafc;
+      --slate-50:  #020617;
+      --slate-100: #0f172a;
+      --slate-200: #1e293b;
+      --slate-300: #334155;
+      --slate-400: #475569;
+      --slate-500: #64748b;
+      --slate-600: #94a3b8;
+      --slate-700: #cbd5e1;
+      --slate-800: #e2e8f0;
+      --slate-900: #f1f5f9;
+      --slate-950: #f8fafc;
+    }
+
+    /* ============================================================
+       VISUAL TOKENS — shared VERBATIM with the workshop-slides
+       template, so an <svg> from here pastes into a slide deck with
+       no edits. Keep both in sync: a missing token silently renders
+       as no fill.
+
+       Hue fills are translucent on purpose — a 16% wash reads as a
+       muted tint over the dark page and a pastel over the light one,
+       so one value serves both themes.
+
+       FLAT BY DESIGN — no shadows anywhere, and never
+       `filter:`/feDropShadow: a filtered region forces Chrome's
+       print-to-PDF to rasterise that area into a bitmap, and a faked
+       offset-rect shadow peeks out under a shape's own border in
+       light mode.
+    ============================================================ */
+    :root {
+      --dg-text:    var(--slate-100);
+      --dg-muted:   var(--slate-400);
+      --dg-line:    var(--slate-500);
+      --dg-border:  var(--slate-700);
+      --dg-surface: color-mix(in srgb, var(--slate-800) 55%, transparent);
+
+      --dg-blue:        #60a5fa;
+      --dg-blue-fill:   color-mix(in srgb, #60a5fa 16%, transparent);
+      --dg-violet:      #a78bfa;
+      --dg-violet-fill: color-mix(in srgb, #a78bfa 16%, transparent);
+      --dg-mint:        #34d399;
+      --dg-mint-fill:   color-mix(in srgb, #34d399 16%, transparent);
+      --dg-amber:       #fbbf24;
+      --dg-amber-fill:  color-mix(in srgb, #fbbf24 16%, transparent);
+      --dg-rose:        #fb7185;
+      --dg-rose-fill:   color-mix(in srgb, #fb7185 16%, transparent);
+      --dg-cyan:        #22d3ee;
+      --dg-cyan-fill:   color-mix(in srgb, #22d3ee 16%, transparent);
+      --dg-accent-fill: color-mix(in srgb, var(--brand-accent) 16%, transparent);
+    }
+
+    /* ============================================================
+       PAGE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--brand-bg);
+      color: var(--slate-100);
+      font-family: var(--brand-font-main);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 56px 40px 72px;
+      gap: 34px;
+    }
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+    #head {
+      width: 100%;
+      max-width: 1160px;
+      flex-shrink: 0;
+    }
+
+    .kicker {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--brand-accent);
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--slate-50);
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin-top: 9px;
+      font-size: 1rem;
+      color: var(--slate-400);
+      line-height: 1.55;
+      max-width: 68ch;
+      text-wrap: pretty;
+    }
+
+    #head::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--brand-accent);
+      margin-top: 18px;
+    }
+
+    /* ============================================================
+       CANVAS — holds the visual
+    ============================================================ */
+    #canvas {
+      width: 100%;
+      max-width: 1160px;
+      display: flex;
+      flex-direction: column;
+      gap: 46px;
+    }
+
+    /* One visual, optionally with its own caption */
+    .figure { width: 100%; }
+
+    .figure > svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* Portrait and small visuals — a phone mockup stretched to the full canvas
+       width reads as a billboard. Cap it and centre it instead. */
+    .figure.narrow > svg {
+      max-width: 400px;
+      margin-inline: auto;
+    }
+
+    .figure.medium > svg {
+      max-width: 760px;
+      margin-inline: auto;
+    }
+
+    .figure-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--brand-accent);
+      margin-bottom: 16px;
+    }
+
+    .figure-label.muted { color: var(--slate-500); }
+
+    .figure-note {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: var(--slate-400);
+      line-height: 1.55;
+      max-width: 72ch;
+    }
+
+    .figure-note code {
+      font-family: var(--brand-font-code);
+      font-size: 0.88em;
+      color: var(--slate-300);
+    }
+
+    /* Grid of individual swatches — each cell is its own self-contained
+       <svg>, so a cell can be lifted out and pasted somewhere else. */
+    .shape-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 30px 24px;
+    }
+
+    .shape-cell > svg { display: block; width: 100%; height: auto; }
+
+    .shape-cell figcaption {
+      margin-top: 9px;
+      font-size: 0.78rem;
+      color: var(--slate-400);
+      line-height: 1.45;
+    }
+
+    .shape-cell figcaption code {
+      font-family: var(--brand-font-code);
+      font-size: 0.92em;
+      color: var(--slate-300);
+    }
+
+    /* Section rule between groups of figures */
+    .figure-group-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--slate-50);
+      padding-top: 26px;
+      border-top: 1px solid var(--slate-800);
+    }
+
+    /* ============================================================
+       THEME TOGGLE — top right
+    ============================================================ */
+    #themeToggle {
+      position: fixed;
+      top: 24px;
+      right: 32px;
+      z-index: 10;
+      width: 38px;
+      height: 38px;
+      background: transparent;
+      border: 1px solid var(--slate-700);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--slate-300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    #themeToggle:hover {
+      background: var(--slate-800);
+      color: var(--brand-accent);
+      border-color: var(--brand-accent);
+    }
+
+    #themeToggle svg { width: 18px; height: 18px; }
+    #themeToggle .icon-moon { display: none; }
+    :root[data-theme="light"] #themeToggle .icon-sun  { display: none; }
+    :root[data-theme="light"] #themeToggle .icon-moon { display: flex; }
+
+    /* ============================================================
+       PRINT — keep the flat look and the page background
+    ============================================================ */
+    @media print {
+      @page { size: auto; margin: 14mm; }
+      html, body {
+        background: var(--brand-bg);
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      #themeToggle { display: none !important; }
+      .figure { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     HEADER — replace the text, keep the structure
+================================================================ -->
+<header id="head">
+  <span class="kicker">Diagram</span>
+  <h1>Visual title</h1>
+  <p class="lede">One line describing what the visual shows.</p>
+</header>
+
+<!-- ================================================================
+     CANVAS
+
+     FIGURES GO HERE — replace this comment with one or more
+     .figure blocks following the patterns in SKILL.md:
+
+       <div class="figure">
+         <div class="figure-label">Optional label</div>
+         <svg viewBox="0 0 W H" xmlns="http://www.w3.org/2000/svg"
+              role="img" aria-label="Describe the visual">
+           ...
+         </svg>
+         <p class="figure-note">Optional caption.</p>
+       </div>
+================================================================ -->
+<main id="canvas">
+</main>
+
+<!-- ================================================================
+     THEME TOGGLE
+================================================================ -->
+<button id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle dark/light mode (T)">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+  </svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>
+  </svg>
+</button>
+
+<script>
+  /* Dark/light toggle — button or "T". Remembers the choice. */
+  (function () {
+    const root = document.documentElement;
+    const btn  = document.getElementById('themeToggle');
+    root.setAttribute('data-theme', localStorage.getItem('soft-visual-theme') || 'dark');
+
+    function toggle() {
+      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('soft-visual-theme', next);
+    }
+
+    btn.addEventListener('click', toggle);
+    document.addEventListener('keydown', e => {
+      if (e.key === 't' || e.key === 'T') { e.preventDefault(); toggle(); }
+    });
+  })();
+</script>
+
+</body>
+</html>

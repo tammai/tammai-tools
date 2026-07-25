@@ -9,7 +9,7 @@
     {
       "name": "tammai-tools",
       "source": "./",
-      "description": "A collection of workshop and presentation tools built on the BigIn design system. Includes a skill for generating polished, self-contained HTML slide decks.",
+      "description": "A collection of workshop and presentation tools by Tam Mai. Generate polished HTML slide decks on the BigIn design system, soft flat diagrams, wireframes and mindmaps, and export decks to print-ready PDF.",
       "author": {
         "name": "Tam Mai",
         "email": "tam.mai@bigin.vn"
@@ -17,7 +17,20 @@
       "homepage": "https://github.com/tammai/tammai-tools",
       "repository": "https://github.com/tammai/tammai-tools",
       "license": "MIT",
-      "keywords": ["workshop", "slides", "presentation", "html", "bigin", "dark-theme"]
+      "keywords": [
+        "workshop",
+        "slides",
+        "presentation",
+        "html",
+        "pdf",
+        "export",
+        "bigin",
+        "dark-theme",
+        "diagram",
+        "wireframe",
+        "mindmap",
+        "svg"
+      ]
     }
   ]
 }

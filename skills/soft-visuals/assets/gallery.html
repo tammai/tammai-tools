@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soft Visuals — Gallery &amp; Shape Reference</title>
+
+  <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  FONTS — Google Sans (labels) · JetBrains Mono (code only)   ║
+    ╚══════════════════════════════════════════════════════════════╝
+    Requested as a variable font over wght 400..700 because the shape
+    labels use 400/500/600/700 — a fixed list leaves 600 synthesised.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ╔══════════════════════════════════════════════════════════════╗
+       ║  BRAND CONFIGURATION — edit to match your brand              ║
+       ╚══════════════════════════════════════════════════════════════╝ */
+    :root {
+      --brand-accent: #f97316;
+      --brand-bg: #020617;
+      --brand-font-main: 'Google Sans', system-ui, sans-serif;
+      --brand-font-code: 'JetBrains Mono', monospace;
+    }
+
+    /* ============================================================
+       DESIGN TOKENS — Tailwind slate scale
+    ============================================================ */
+    :root {
+      --slate-50:  #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --slate-950: #020617;
+    }
+
+    /* ============================================================
+       LIGHT MODE — reverses the slate scale + page background.
+       Toggled via [data-theme="light"] on <html>.
+    ============================================================ */
+    :root[data-theme="light"] {
+      --brand-bg:  #f8fafc;
+      --slate-50:  #020617;
+      --slate-100: #0f172a;
+      --slate-200: #1e293b;
+      --slate-300: #334155;
+      --slate-400: #475569;
+      --slate-500: #64748b;
+      --slate-600: #94a3b8;
+      --slate-700: #cbd5e1;
+      --slate-800: #e2e8f0;
+      --slate-900: #f1f5f9;
+      --slate-950: #f8fafc;
+    }
+
+    /* ============================================================
+       VISUAL TOKENS — shared VERBATIM with the workshop-slides
+       template, so an <svg> from here pastes into a slide deck with
+       no edits. Keep both in sync: a missing token silently renders
+       as no fill.
+
+       Hue fills are translucent on purpose — a 16% wash reads as a
+       muted tint over the dark page and a pastel over the light one,
+       so one value serves both themes.
+
+       FLAT BY DESIGN — no shadows anywhere, and never
+       `filter:`/feDropShadow: a filtered region forces Chrome's
+       print-to-PDF to rasterise that area into a bitmap, and a faked
+       offset-rect shadow peeks out under a shape's own border in
+       light mode.
+    ============================================================ */
+    :root {
+      --dg-text:    var(--slate-100);
+      --dg-muted:   var(--slate-400);
+      --dg-line:    var(--slate-500);
+      --dg-border:  var(--slate-700);
+      --dg-surface: color-mix(in srgb, var(--slate-800) 55%, transparent);
+
+      --dg-blue:        #60a5fa;
+      --dg-blue-fill:   color-mix(in srgb, #60a5fa 16%, transparent);
+      --dg-violet:      #a78bfa;
+      --dg-violet-fill: color-mix(in srgb, #a78bfa 16%, transparent);
+      --dg-mint:        #34d399;
+      --dg-mint-fill:   color-mix(in srgb, #34d399 16%, transparent);
+      --dg-amber:       #fbbf24;
+      --dg-amber-fill:  color-mix(in srgb, #fbbf24 16%, transparent);
+      --dg-rose:        #fb7185;
+      --dg-rose-fill:   color-mix(in srgb, #fb7185 16%, transparent);
+      --dg-cyan:        #22d3ee;
+      --dg-cyan-fill:   color-mix(in srgb, #22d3ee 16%, transparent);
+      --dg-accent-fill: color-mix(in srgb, var(--brand-accent) 16%, transparent);
+    }
+
+    /* ============================================================
+       PAGE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--brand-bg);
+      color: var(--slate-100);
+      font-family: var(--brand-font-main);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 56px 40px 72px;
+      gap: 34px;
+    }
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+    #head {
+      width: 100%;
+      max-width: 1160px;
+      flex-shrink: 0;
+    }
+
+    .kicker {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--brand-accent);
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--slate-50);
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin-top: 9px;
+      font-size: 1rem;
+      color: var(--slate-400);
+      line-height: 1.55;
+      max-width: 68ch;
+      text-wrap: pretty;
+    }
+
+    #head::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--brand-accent);
+      margin-top: 18px;
+    }
+
+    /* ============================================================
+       CANVAS — holds the visual
+    ============================================================ */
+    #canvas {
+      width: 100%;
+      max-width: 1160px;
+      display: flex;
+      flex-direction: column;
+      gap: 46px;
+    }
+
+    /* One visual, optionally with its own caption */
+    .figure { width: 100%; }
+
+    .figure > svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* Portrait and small visuals — a phone mockup stretched to the full canvas
+       width reads as a billboard. Cap it and centre it instead. */
+    .figure.narrow > svg {
+      max-width: 400px;
+      margin-inline: auto;
+    }
+
+    .figure.medium > svg {
+      max-width: 760px;
+      margin-inline: auto;
+    }
+
+    .figure-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--brand-accent);
+      margin-bottom: 16px;
+    }
+
+    .figure-label.muted { color: var(--slate-500); }
+
+    .figure-note {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: var(--slate-400);
+      line-height: 1.55;
+      max-width: 72ch;
+    }
+
+    .figure-note code {
+      font-family: var(--brand-font-code);
+      font-size: 0.88em;
+      color: var(--slate-300);
+    }
+
+    /* Grid of individual swatches — each cell is its own self-contained
+       <svg>, so a cell can be lifted out and pasted somewhere else. */
+    .shape-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 30px 24px;
+    }
+
+    .shape-cell > svg { display: block; width: 100%; height: auto; }
+
+    .shape-cell figcaption {
+      margin-top: 9px;
+      font-size: 0.78rem;
+      color: var(--slate-400);
+      line-height: 1.45;
+    }
+
+    .shape-cell figcaption code {
+      font-family: var(--brand-font-code);
+      font-size: 0.92em;
+      color: var(--slate-300);
+    }
+
+    /* Section rule between groups of figures */
+    .figure-group-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--slate-50);
+      padding-top: 26px;
+      border-top: 1px solid var(--slate-800);
+    }
+
+    /* ============================================================
+       THEME TOGGLE — top right
+    ============================================================ */
+    #themeToggle {
+      position: fixed;
+      top: 24px;
+      right: 32px;
+      z-index: 10;
+      width: 38px;
+      height: 38px;
+      background: transparent;
+      border: 1px solid var(--slate-700);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--slate-300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    #themeToggle:hover {
+      background: var(--slate-800);
+      color: var(--brand-accent);
+      border-color: var(--brand-accent);
+    }
+
+    #themeToggle svg { width: 18px; height: 18px; }
+    #themeToggle .icon-moon { display: none; }
+    :root[data-theme="light"] #themeToggle .icon-sun  { display: none; }
+    :root[data-theme="light"] #themeToggle .icon-moon { display: flex; }
+
+    /* ============================================================
+       PRINT — keep the flat look and the page background
+    ============================================================ */
+    @media print {
+      @page { size: auto; margin: 14mm; }
+      html, body {
+        background: var(--brand-bg);
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      #themeToggle { display: none !important; }
+      .figure { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     HEADER — replace the text, keep the structure
+================================================================ -->
+<header id="head">
+  <span class="kicker">Reference · shapes · connectors · layouts</span>
+  <h1>Soft Visuals gallery</h1>
+  <p class="lede">Every shape, connector and layout this skill supports. Each
+  <code>&lt;svg&gt;</code> is self-contained — copy one out and it works anywhere the
+  <code>--dg-*</code> tokens are defined, including a workshop-slides deck. Press
+  <strong>T</strong> for light mode.</p>
+</header>
+
+<!-- ================================================================
+     CANVAS
+
+     FIGURES GO HERE — replace this comment with one or more
+     .figure blocks following the patterns in SKILL.md:
+
+       <div class="figure">
+         <div class="figure-label">Optional label</div>
+         <svg viewBox="0 0 W H" xmlns="http://www.w3.org/2000/svg"
+              role="img" aria-label="Describe the visual">
+           ...
+         </svg>
+         <p class="figure-note">Optional caption.</p>
+       </div>
+================================================================ -->
+<main id="canvas">
+<div class="figure">
+  <div class="figure-label">Shape library</div>
+  <div class="shape-grid">
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>card</code> — the default. A step, service, or component"><rect x="15" y="14" width="170" height="60" rx="12" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/><text x="100.0" y="41.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Process</text><text x="100.0" y="57.0" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">with caption</text></svg><figcaption><code>card</code> — the default. A step, service, or component</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>pill</code> — terminator, entry or exit point"><rect x="15" y="22" width="170" height="46" rx="23.0" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.75"/><text x="100.0" y="49.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Start / End</text></svg><figcaption><code>pill</code> — terminator, entry or exit point</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>diamond</code> — a branch. Label the outgoing edges"><polygon points="100,13.0 184.0,44 100,75.0 16.0,44" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><text x="100" y="48.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Decision?</text></svg><figcaption><code>diamond</code> — a branch. Label the outgoing edges</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>cylinder</code> — datastore, queue, bucket"><path d="M28 21 A72.0 9 0 0 1 172 21 V69 A72.0 9 0 0 1 28 69 Z" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><path d="M28 21 A72.0 9 0 0 0 172 21" fill="none" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="100.0" y="52.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Database</text></svg><figcaption><code>cylinder</code> — datastore, queue, bucket</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>hexagon</code> — preparation or setup step"><polygon points="30,16 170,16 185,44.0 170,72 30,72 15,44.0" fill="var(--dg-cyan-fill)" stroke="var(--dg-cyan)" stroke-width="1.75" stroke-linejoin="round"/><text x="100.0" y="48.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Config</text></svg><figcaption><code>hexagon</code> — preparation or setup step</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>parallelogram</code> — input or output"><polygon points="31,18 185,18 169,70 15,70" fill="var(--dg-rose-fill)" stroke="var(--dg-rose)" stroke-width="1.75" stroke-linejoin="round"/><text x="100.0" y="48.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Input</text></svg><figcaption><code>parallelogram</code> — input or output</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>circle</code> — step number or junction"><circle cx="100" cy="44" r="27" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><text x="100" y="48.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">3</text></svg><figcaption><code>circle</code> — step number or junction</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>doc</code> — document or generated artifact"><path d="M24 22 Q24 12 34 12 H166 Q176 12 176 22 V64 C130.39999999999998 82 69.6 54 24 66 Z" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75" stroke-linejoin="round"/><text x="100.0" y="43.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Report</text></svg><figcaption><code>doc</code> — document or generated artifact</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>note</code> — sticky annotation, folded corner"><path d="M32 14 H158 L176 32 V66 Q176 74 168 74 H32 Q24 74 24 66 V22 Q24 14 32 14 Z" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><path d="M158 14 V32 H176 Z" fill="var(--dg-amber)" opacity="0.35" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><text x="100.0" y="50.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Remember</text></svg><figcaption><code>note</code> — sticky annotation, folded corner</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>actor</code> — a person or external role"><circle cx="100" cy="23" r="10" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><path d="M84 58 Q100 36 116 58" fill="none" stroke="var(--dg-violet)" stroke-width="1.75" stroke-linecap="round"/><text x="100" y="76.5" text-anchor="middle" font-size="12" font-weight="500" fill="var(--dg-text)">End user</text></svg><figcaption><code>actor</code> — a person or external role</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>cloud</code> — external or third-party system"><path d="M51 74 C33 74 27 56 41 48 C33 32 51 20 67 28 C75 10 109 10 117 28 C141 20 163 34 157 52 C173 60 167 74 149 74 Z" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><text x="100.0" y="55.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Internet</text></svg><figcaption><code>cloud</code> — external or third-party system</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>group</code> — dashed container for a trust or network boundary"><rect x="12" y="12" width="176" height="66" rx="14" fill="none" stroke="var(--dg-border)" stroke-width="1.75" stroke-dasharray="6 5"/><text x="26" y="32" font-size="10" font-weight="600" letter-spacing="0.18em" fill="var(--dg-muted)">BOUNDARY</text></svg><figcaption><code>group</code> — dashed container for a trust or network boundary</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>triangle</code> — warning or hierarchy apex"><polygon points="100.0,10 170,82 30,82" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><text x="100.0" y="66.34" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Alert</text></svg><figcaption><code>triangle</code> — warning or hierarchy apex</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>trapezoid</code> — manual operation"><polygon points="41,16 159,16 185,74 15,74" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.75" stroke-linejoin="round"/><text x="100.0" y="52.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Manual</text></svg><figcaption><code>trapezoid</code> — manual operation</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>parallelogram, flipped</code> — pair with the normal one for in vs out"><polygon points="15,18 169,18 185,70 31,70" fill="var(--dg-rose-fill)" stroke="var(--dg-rose)" stroke-width="1.75" stroke-linejoin="round"/><text x="100.0" y="48.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Output</text></svg><figcaption><code>parallelogram, flipped</code> — pair with the normal one for in vs out</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>bracket</code> — annotate a span of rows"><path d="M161 14 Q150 14 150 25 V37.0 Q150 46.0 141 46.0 Q150 46.0 150 55.0 V67 Q150 78 161 78" fill="none" stroke="var(--dg-border)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><text x="132" y="50.0" text-anchor="end" font-size="12" fill="var(--dg-muted)">Retry x3</text></svg><figcaption><code>bracket</code> — annotate a span of rows</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>annotation</code> — callout with a tail. Unlike <code>note</code> it points at something"><path d="M38 14 H176 Q186 14 186 24 V62 Q186 72 176 72 H38 Q28 72 28 62 V53.0 L18 43.0 L28 33.0 V24 Q28 14 38 14 Z" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><text x="107.0" y="47.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Points at it</text></svg><figcaption><code>annotation</code> — callout with a tail. Unlike <code>note</code> it points at something</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>sequence actor</code> — header plus dashed lifeline"><rect x="40" y="8" width="120" height="40" rx="10" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="100.0" y="32.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Service</text><path d="M100.0 48 V92" stroke="var(--dg-line)" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.8"/></svg><figcaption><code>sequence actor</code> — header plus dashed lifeline</figcaption></figure>
+  </div>
+  <p class="figure-note">One stroke width (<code>1.75</code>) and one corner radius (<code>12</code>) across every shape — that evenness is most of the style. Hue carries meaning, so keep it consistent within a visual and give only the focal node <code>--dg-accent-fill</code>.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-label">Connectors</div>
+  <div class="shape-grid">
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>straight</code> — same row or column"><defs><marker id="ac1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-line)"/></marker></defs><path d="M20 46 H172" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ac1)"/></svg><figcaption><code>straight</code> — same row or column</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>elbow</code> — <code>Q</code> corners, radius 16"><defs><marker id="ac2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-line)"/></marker></defs><path d="M20 22 H120 Q136 22 136 38 V70" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ac2)"/></svg><figcaption><code>elbow</code> — <code>Q</code> corners, radius 16</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>curve</code> — <code>C</code>, for mindmaps and soft flows"><defs><marker id="ac3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-line)"/></marker></defs><path d="M20 70 C70 70 110 22 172 22" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ac3)"/></svg><figcaption><code>curve</code> — <code>C</code>, for mindmaps and soft flows</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>dashed</code> — async, optional, or planned"><defs><marker id="ac4" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-line)"/></marker></defs><path d="M20 46 H172" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#ac4)"/></svg><figcaption><code>dashed</code> — async, optional, or planned</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>labelled</code> — chip sits on the line"><defs><marker id="ac5" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-line)"/></marker></defs><path d="M20 46 H172" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ac5)"/><rect x="57.0" y="36" width="78.0" height="20" rx="6" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1"/><text x="96" y="50" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">on success</text></svg><figcaption><code>labelled</code> — chip sits on the line</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>hue-matched</code> — colour the marker to match"><defs><marker id="ac6" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-mint)"/></marker></defs><path d="M20 46 H172" fill="none" stroke="var(--dg-mint)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ac6)"/></svg><figcaption><code>hue-matched</code> — colour the marker to match</figcaption></figure>
+  </div>
+  <p class="figure-note">Draw connectors <em>before</em> the shapes so the line ends are painted over. Stop the path 4–6px short of the target so the arrowhead sits in the gap rather than touching the border.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-label">Wireframe components</div>
+  <div class="shape-grid">
+  <figure class="shape-cell"><svg viewBox="0 0 200 66" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>button</code> / <code>button, outline</code>"><rect x="10" y="18" width="84" height="30" rx="15.0" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><text x="52.0" y="37.0" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--brand-accent)">Primary</text><rect x="104" y="18" width="86" height="30" rx="15.0" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><text x="147.0" y="37.0" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--dg-muted)">Secondary</text></svg><figcaption><code>button</code> / <code>button, outline</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>text input</code>"><rect x="10" y="20" width="180" height="32" rx="7" fill="none" stroke="var(--dg-border)" stroke-width="1.75"/><text x="22" y="40.0" font-size="11" fill="var(--dg-muted)">Email address</text></svg><figcaption><code>text input</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>textarea</code> — resize handle bottom-right"><rect x="10" y="12" width="180" height="66" rx="7" fill="none" stroke="var(--dg-border)" stroke-width="1.75"/><text x="22" y="32" font-size="11" fill="var(--dg-muted)">Message…</text><path d="M176 72 l8 -8 M182 72 l2 -2" stroke="var(--dg-muted)" stroke-width="1.4" stroke-linecap="round"/></svg><figcaption><code>textarea</code> — resize handle bottom-right</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>dropdown</code> — closed select"><rect x="10" y="20" width="180" height="32" rx="7" fill="none" stroke="var(--dg-border)" stroke-width="1.75"/><text x="22" y="40.0" font-size="11" fill="var(--dg-muted)">Choose one</text><path d="M167 34.0 L172 39.0 L177 34.0" fill="none" stroke="var(--dg-muted)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><figcaption><code>dropdown</code> — closed select</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 76" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>checkbox</code>"><rect x="12" y="12" width="17" height="17" rx="5" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><path d="M16 20.5 L19.14 24 L25 17" fill="none" stroke="var(--brand-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="39" y="24.5" font-size="11" fill="var(--dg-muted)">Checked</text><rect x="12" y="44" width="17" height="17" rx="5" fill="none" stroke="var(--dg-border)" stroke-width="1.75"/><text x="39" y="56.5" font-size="11" fill="var(--dg-muted)">Unchecked</text></svg><figcaption><code>checkbox</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 76" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>radio button</code>"><circle cx="20.5" cy="20.5" r="8.5" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><circle cx="20.5" cy="20.5" r="3.57" fill="var(--brand-accent)"/><text x="39.0" y="24.5" font-size="11" fill="var(--dg-muted)">Selected</text><circle cx="20.5" cy="52.5" r="8.5" fill="none" stroke="var(--dg-border)" stroke-width="1.75"/><text x="39.0" y="56.5" font-size="11" fill="var(--dg-muted)">Not selected</text></svg><figcaption><code>radio button</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>toggle</code>"><rect x="12" y="12" width="38" height="21" rx="10.5" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><circle cx="39.5" cy="22.5" r="6.0" fill="var(--brand-accent)"/><text x="60" y="27" font-size="11" fill="var(--dg-muted)">On</text><rect x="12" y="46" width="38" height="21" rx="10.5" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><circle cx="22.5" cy="56.5" r="6.0" fill="var(--brand-accent)" opacity="0.35"/><text x="60" y="61" font-size="11" fill="var(--dg-muted)">Off</text></svg><figcaption><code>toggle</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 68" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>slider</code>"><path d="M16 34 H184" stroke="var(--dg-border)" stroke-width="4" stroke-linecap="round"/><path d="M16 34 H108.4" stroke="var(--brand-accent)" stroke-width="4" stroke-linecap="round"/><circle cx="108.4" cy="34" r="8.5" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/></svg><figcaption><code>slider</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 62" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>progress bar</code>"><rect x="12" y="30" width="176" height="9" rx="4.5" fill="var(--dg-border)"/><rect x="12" y="30" width="105.6" height="9" rx="4.5" fill="var(--brand-accent)"/><text x="12" y="22" font-size="11" fill="var(--dg-muted)">60%</text></svg><figcaption><code>progress bar</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>tabs</code> — accent underline marks active"><path d="M10 42 H190" stroke="var(--dg-border)" stroke-width="1.75"/><text x="40.0" y="31.0" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--brand-accent)">One</text><path d="M20.0 42 H60.0" stroke="var(--brand-accent)" stroke-width="2.5" stroke-linecap="round"/><text x="100.0" y="31.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="var(--dg-muted)">Two</text><text x="160.0" y="31.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="var(--dg-muted)">Three</text></svg><figcaption><code>tabs</code> — accent underline marks active</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>tabs, vertical</code>"><text x="24" y="25.0" font-size="11.5" font-weight="400" fill="var(--dg-muted)">Overview</text><rect x="10" y="38" width="160" height="26" rx="7" fill="var(--dg-accent-fill)"/><path d="M10 43 V59" stroke="var(--brand-accent)" stroke-width="2.5" stroke-linecap="round"/><text x="24" y="55.0" font-size="11.5" font-weight="600" fill="var(--brand-accent)">Members</text><text x="24" y="85.0" font-size="11.5" font-weight="400" fill="var(--dg-muted)">Billing</text></svg><figcaption><code>tabs, vertical</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 62" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>tabs, mobile</code> — bottom bar"><path d="M10 20 H190" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="20.5" y="30" width="24" height="16" rx="5" fill="var(--brand-accent)" opacity="0.85"/><rect x="65.5" y="30" width="24" height="16" rx="5" fill="var(--dg-muted)" opacity="0.3"/><rect x="110.5" y="30" width="24" height="16" rx="5" fill="var(--dg-muted)" opacity="0.3"/><rect x="155.5" y="30" width="24" height="16" rx="5" fill="var(--dg-muted)" opacity="0.3"/></svg><figcaption><code>tabs, mobile</code> — bottom bar</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 74" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>tooltip</code> — pointer tail"><path d="M38 16 H162 Q170 16 170 24 V42 Q170 50 162 50 H109.0 L100.0 59 L91.0 50 H38 Q30 50 30 42 V24 Q30 16 38 16 Z" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75" stroke-linejoin="round"/><text x="100.0" y="37.0" text-anchor="middle" font-size="11" fill="var(--dg-text)">Helpful hint</text></svg><figcaption><code>tooltip</code> — pointer tail</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 102" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>overlay</code> — dimmed screen + modal"><rect x="10" y="6" width="180" height="90" rx="8" fill="var(--dg-line)" opacity="0.28"/><rect x="36.0" y="16.0" width="128" height="70" rx="10" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="50.0" y="30.0" width="64.0" height="10" rx="4" fill="var(--dg-muted)" opacity="0.7"/><rect x="50.0" y="48.0" width="97.28" height="7" rx="4" fill="var(--dg-muted)" opacity="0.3"/><rect x="94.0" y="60.0" width="56" height="20" rx="10.0" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><text x="122.0" y="74.0" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--brand-accent)">OK</text></svg><figcaption><code>overlay</code> — dimmed screen + modal</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 68" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>stars</code> — rating"><polygon points="35.0,25.0 37.4,30.7 43.6,31.2 38.9,35.3 40.3,41.3 35.0,38.0 29.7,41.3 31.1,35.3 26.4,31.2 32.6,30.7" fill="var(--dg-amber)" stroke="var(--dg-amber)" stroke-width="1.4" stroke-linejoin="round" opacity="1"/><polygon points="57.0,25.0 59.4,30.7 65.6,31.2 60.9,35.3 62.3,41.3 57.0,38.0 51.7,41.3 53.1,35.3 48.4,31.2 54.6,30.7" fill="var(--dg-amber)" stroke="var(--dg-amber)" stroke-width="1.4" stroke-linejoin="round" opacity="1"/><polygon points="79.0,25.0 81.4,30.7 87.6,31.2 82.9,35.3 84.3,41.3 79.0,38.0 73.7,41.3 75.1,35.3 70.4,31.2 76.6,30.7" fill="var(--dg-amber)" stroke="var(--dg-amber)" stroke-width="1.4" stroke-linejoin="round" opacity="1"/><polygon points="101.0,25.0 103.4,30.7 109.6,31.2 104.9,35.3 106.3,41.3 101.0,38.0 95.7,41.3 97.1,35.3 92.4,31.2 98.6,30.7" fill="var(--dg-amber)" stroke="var(--dg-amber)" stroke-width="1.4" stroke-linejoin="round" opacity="1"/><polygon points="123.0,25.0 125.4,30.7 131.6,31.2 126.9,35.3 128.3,41.3 123.0,38.0 117.7,41.3 119.1,35.3 114.4,31.2 120.6,30.7" fill="none" stroke="var(--dg-amber)" stroke-width="1.4" stroke-linejoin="round" opacity="0.5"/></svg><figcaption><code>stars</code> — rating</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>tag</code>"><rect x="12" y="20" width="60.400000000000006" height="22" rx="11" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.4"/><text x="42.2" y="35" text-anchor="middle" font-size="10.5" fill="var(--dg-mint)">Active</text><rect x="92" y="20" width="47.6" height="22" rx="11" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.4"/><text x="115.8" y="35" text-anchor="middle" font-size="10.5" fill="var(--dg-violet)">Beta</text></svg><figcaption><code>tag</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>video</code>"><rect x="20" y="10" width="160" height="72" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75" stroke-dasharray="5 4"/><circle cx="100.0" cy="46.0" r="17" fill="var(--dg-muted)" opacity="0.35"/><path d="M95.0 38.0 L108.0 46.0 L95.0 54.0 Z" fill="var(--dg-muted)"/></svg><figcaption><code>video</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>map</code>"><rect x="20" y="10" width="160" height="72" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><path d="M20 54.64 C52.0 40.239999999999995 74.4 66.16 112.8 51.76 C144.8 40.239999999999995 164.0 57.52 180 48.88 L180 82 L20 82 Z" fill="var(--dg-mint)" opacity="0.18"/><path d="M42.400000000000006 67.6 C77.6 46.0 103.2 61.839999999999996 151.2 31.599999999999998" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-dasharray="5 4"/><path d="M151.2 31.599999999999998 c0 0 -8 -8 -8 -14 a8 8 0 0 1 16 0 c0 6 -8 14 -8 14 z" fill="var(--dg-rose-fill)" stroke="var(--dg-rose)" stroke-width="1.5"/></svg><figcaption><code>map</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>image</code> — dashed = placeholder"><rect x="20" y="10" width="160" height="72" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75" stroke-dasharray="5 4"/><path d="M55.2 60.4 L84.0 43.120000000000005 L106.4 54.64 L125.60000000000001 44.56 L148.0 60.4 Z" fill="var(--dg-muted)" opacity="0.5"/><circle cx="132.0" cy="31.599999999999998" r="5.3999999999999995" fill="var(--dg-muted)" opacity="0.5"/></svg><figcaption><code>image</code> — dashed = placeholder</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 84" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>avatar</code>"><circle cx="44" cy="42" r="20" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="44" cy="36.4" r="6.800000000000001" fill="var(--dg-violet)" opacity="0.75"/><path d="M33.0 54.4 Q44 43.0 55.0 54.4" fill="var(--dg-violet)" opacity="0.75"/><circle cx="108" cy="42" r="14" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="108" cy="38.08" r="4.760000000000001" fill="var(--dg-violet)" opacity="0.75"/><path d="M100.3 50.68 Q108 42.7 115.7 50.68" fill="var(--dg-violet)" opacity="0.75"/><circle cx="160" cy="42" r="10" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="160" cy="39.2" r="3.4000000000000004" fill="var(--dg-violet)" opacity="0.75"/><path d="M154.5 48.2 Q160 42.5 165.5 48.2" fill="var(--dg-violet)" opacity="0.75"/></svg><figcaption><code>avatar</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 88" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>text, block</code> — heading + lorem lines"><rect x="12" y="16" width="176" height="12" rx="4" fill="var(--dg-muted)" opacity="0.75"/><rect x="12" y="38" width="150" height="8" rx="4" fill="var(--dg-muted)" opacity="0.35"/><rect x="12" y="54" width="168" height="8" rx="4" fill="var(--dg-muted)" opacity="0.35"/><rect x="12" y="70" width="96" height="8" rx="4" fill="var(--dg-muted)" opacity="0.35"/></svg><figcaption><code>text, block</code> — heading + lorem lines</figcaption></figure>
+  </div>
+  <p class="figure-note">Wireframes drop the hues and work in <code>--dg-surface</code> / <code>--dg-border</code> greys. The accent marks <em>one</em> thing per screen — the primary action, or the active tab — never both. Copy stays as placeholder bars: real sentences make reviewers argue about the wording instead of the layout.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-label">Wireframe frames</div>
+  <div class="shape-grid">
+  <figure class="shape-cell"><svg viewBox="0 0 200 94" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>plain</code> — bare canvas"><rect x="20" y="8" width="160" height="78" rx="10" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/></svg><figcaption><code>plain</code> — bare canvas</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 94" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>window</code> — desktop browser"><rect x="15" y="8" width="170" height="78" rx="12" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><path d="M15 42 H185" stroke="var(--dg-border)" stroke-width="1.75"/><circle cx="33" cy="25" r="4.5" fill="var(--dg-rose)" opacity="0.75"/><circle cx="51" cy="25" r="4.5" fill="var(--dg-amber)" opacity="0.75"/><circle cx="69" cy="25" r="4.5" fill="var(--dg-mint)" opacity="0.75"/></svg><figcaption><code>window</code> — desktop browser</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 124" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>phone</code> — iPhone / Android"><rect x="64" y="6" width="72" height="112" rx="26" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="88.48" y="17" width="23.04" height="9" rx="4.5" fill="var(--dg-border)" opacity="0.85"/></svg><figcaption><code>phone</code> — iPhone / Android</figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>tablet</code>"><rect x="46" y="8" width="108" height="88" rx="18" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="90.28" y="19" width="19.439999999999998" height="9" rx="4.5" fill="var(--dg-border)" opacity="0.85"/></svg><figcaption><code>tablet</code></figcaption></figure>
+  <figure class="shape-cell"><svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="<code>watch</code>"><rect x="72" y="20" width="56" height="58" rx="15.680000000000001" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="91.04" y="11" width="17.92" height="9" rx="4" fill="var(--dg-border)" opacity="0.7"/><rect x="91.04" y="78" width="17.92" height="9" rx="4" fill="var(--dg-border)" opacity="0.7"/></svg><figcaption><code>watch</code></figcaption></figure>
+  </div>
+  <p class="figure-note">Pick the frame that matches the target, then lay the components inside it. Use <code>class="figure narrow"</code> for phone and watch frames so they do not stretch to the full canvas width.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-group-title">Flowchart</div>
+  <svg viewBox="0 0 720 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CI flow: a pushed commit runs tests, then either deploys to staging or notifies the author"><defs><marker id="afc" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-line)"/></marker></defs><path d="M115 62 V84" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#afc)"/><path d="M115 154 V160" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#afc)"/><path d="M203 200 H304" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#afc)"/><rect x="238.7" y="190" width="34.6" height="20" rx="6" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1"/><text x="256" y="204" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">yes</text><path d="M115 234 V266" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#afc)"/><rect x="100.8" y="240" width="28.4" height="20" rx="6" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1"/><text x="115" y="254" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">no</text><path d="M510 200 H524 Q536 200 536 188 V138 Q536 126 548 126" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#afc)"/><path d="M115 336 V350" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#afc)"/><path d="M410 230 V274" fill="none" stroke="var(--dg-line)" stroke-width="1.4" stroke-dasharray="5 5" opacity="0.7"/><rect x="30" y="16" width="170" height="46" rx="23.0" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.75"/><text x="115.0" y="43.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Commit pushed</text><rect x="25" y="90" width="180" height="64" rx="12" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/><text x="115.0" y="119.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Run test suite</text><text x="115.0" y="135.0" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">unit + integration</text><polygon points="115,166.0 203.0,200 115,234.0 27.0,200" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><text x="115" y="204.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">All green?</text><rect x="310" y="170" width="200" height="60" rx="12" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/><text x="410.0" y="204.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Deploy to staging</text><path d="M555 105 A75.0 9 0 0 1 705 105 V147 A75.0 9 0 0 1 555 147 Z" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><path d="M555 105 A75.0 9 0 0 0 705 105" fill="none" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="630.0" y="133.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Artifact store</text><rect x="20" y="272" width="190" height="64" rx="12" fill="var(--dg-rose-fill)" stroke="var(--dg-rose)" stroke-width="1.75"/><text x="115.0" y="301.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Notify author</text><text x="115.0" y="317.0" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">with the failing test</text><rect x="30" y="356" width="170" height="46" rx="23.0" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><text x="115.0" y="383.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Stop</text><path d="M318 280 H492 L510 298 V334 Q510 342 502 342 H318 Q310 342 310 334 V288 Q310 280 318 280 Z" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><path d="M492 280 V298 H510 Z" fill="var(--dg-amber)" opacity="0.35" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><text x="410.0" y="317.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Staging auto-expires</text></svg>
+  <p class="figure-note">A decision <code>diamond</code> with labelled edges is the spine. Failure paths take <code>--dg-rose</code>, the happy path stays neutral blue — colour does the explaining before anyone reads a label. Note the annotation hangs off a dashed <em>leader</em> with no arrowhead: arrows mean flow, and a note is not a step.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-group-title">Architecture</div>
+  <svg viewBox="0 0 700 390" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Client calls an API gateway, which routes through a service mesh to Postgres, Redis and workers inside a private network, with a dashed webhook to Stripe"><defs><marker id="aar" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-line)"/></marker></defs><path d="M300 86 V98" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#aar)"/><path d="M300 172 V202" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#aar)"/><path d="M212 240 H150 Q120 240 120 268 V294" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#aar)"/><path d="M388 240 H450 Q480 240 480 268 V294" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#aar)"/><path d="M300 272 V294" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#aar)"/><path d="M400 135 H544" fill="none" stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6" marker-end="url(#aar)"/><rect x="442.3" y="111" width="59.4" height="20" rx="6" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1"/><text x="472" y="125" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">webhook</text><rect x="30" y="190" width="540" height="176" rx="14" fill="none" stroke="var(--dg-border)" stroke-width="1.75" stroke-dasharray="6 5"/><text x="44" y="210" font-size="10" font-weight="600" letter-spacing="0.18em" fill="var(--dg-muted)">PRIVATE NETWORK</text><circle cx="300" cy="25" r="10" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><path d="M284 60 Q300 38 316 60" fill="none" stroke="var(--dg-violet)" stroke-width="1.75" stroke-linecap="round"/><text x="300" y="78.5" text-anchor="middle" font-size="12" font-weight="500" fill="var(--dg-text)">Client</text><rect x="200" y="104" width="200" height="62" rx="12" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/><text x="300.0" y="132.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">API gateway</text><text x="300.0" y="148.0" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">auth · rate limit</text><rect x="212" y="208" width="176" height="60" rx="12" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><text x="300.0" y="242.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Service mesh</text><path d="M50 309 A70.0 9 0 0 1 190 309 V347 A70.0 9 0 0 1 50 347 Z" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><path d="M50 309 A70.0 9 0 0 0 190 309" fill="none" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="120.0" y="335.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Postgres</text><path d="M230 309 A70.0 9 0 0 1 370 309 V347 A70.0 9 0 0 1 230 347 Z" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><path d="M230 309 A70.0 9 0 0 0 370 309" fill="none" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="300.0" y="335.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Redis</text><polygon points="425,302 535,302 550,328.0 535,354 425,354 410,328.0" fill="var(--dg-cyan-fill)" stroke="var(--dg-cyan)" stroke-width="1.75" stroke-linejoin="round"/><text x="480.0" y="332.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Workers</text><path d="M566 166 C548 166 542 148 556 140 C548 124 566 112 582 120 C590 102 624 102 632 120 C656 112 678 126 672 144 C688 152 682 166 664 166 Z" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linejoin="round"/><text x="615.0" y="147.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Stripe</text></svg>
+  <p class="figure-note">A dashed <code>group</code> marks the trust boundary; <code>cloud</code> sits outside it, in its own hue — a third party is not the same kind of thing as your own compute, so it must not share the workers' colour. Datastores share one hue so they read as a tier. The dashed edge means async, and it starts at the gateway's own edge: a connector floating in the gap beside its source reads as belonging to nothing.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-group-title">Wireframe — desktop</div>
+  <svg viewBox="0 0 700 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dashboard wireframe: browser frame with a sidebar, search, three stat cards, a chart placeholder and an activity list"><rect x="10" y="10" width="680" height="420" rx="14" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><path d="M10 52 H690" stroke="var(--dg-border)" stroke-width="1.75" fill="none"/><circle cx="34" cy="31" r="5.5" fill="var(--dg-rose)" opacity="0.75"/><circle cx="54" cy="31" r="5.5" fill="var(--dg-amber)" opacity="0.75"/><circle cx="74" cy="31" r="5.5" fill="var(--dg-mint)" opacity="0.75"/><rect x="100" y="20" width="300" height="22" rx="11" fill="none" stroke="var(--dg-border)" stroke-width="1.25"/><rect x="114" y="27" width="120" height="8" rx="4" fill="var(--dg-muted)" opacity="0.45"/><rect x="10" y="52" width="150" height="378" rx="0" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="30" y="76" width="78" height="10" rx="4" fill="var(--dg-muted)" opacity="0.7"/><rect x="20" y="104" width="130" height="28" rx="7" fill="var(--dg-accent-fill)"/><rect x="34" y="111" width="74" height="9" rx="4" fill="var(--dg-muted)" opacity="0.9"/><rect x="34" y="143" width="70" height="9" rx="4" fill="var(--dg-muted)" opacity="0.4"/><rect x="34" y="175" width="78" height="9" rx="4" fill="var(--dg-muted)" opacity="0.4"/><rect x="34" y="207" width="86" height="9" rx="4" fill="var(--dg-muted)" opacity="0.4"/><circle cx="38" cy="400" r="13" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="38" cy="396.36" r="4.42" fill="var(--dg-violet)" opacity="0.75"/><path d="M30.85 408.06 Q38 400.65 45.15 408.06" fill="var(--dg-violet)" opacity="0.75"/><rect x="60" y="396" width="62" height="9" rx="4" fill="var(--dg-muted)" opacity="0.5"/><rect x="184" y="80" width="150" height="13" rx="4" fill="var(--dg-muted)" opacity="0.8"/><rect x="578" y="74" width="96" height="26" rx="13.0" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><text x="626.0" y="91.0" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--brand-accent)">New</text><rect x="184" y="112" width="250" height="30" rx="7" fill="none" stroke="var(--dg-border)" stroke-width="1.75"/><text x="196" y="131.0" font-size="11" fill="var(--dg-muted)">Search…</text><rect x="184" y="160" width="154" height="76" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="200" y="178" width="54" height="8" rx="4" fill="var(--dg-muted)" opacity="0.4"/><rect x="200" y="196" width="40" height="16" rx="4" fill="var(--dg-muted)" opacity="0.75"/><rect x="200" y="220" width="76" height="7" rx="4" fill="var(--dg-muted)" opacity="0.3"/><rect x="352" y="160" width="154" height="76" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="368" y="178" width="54" height="8" rx="4" fill="var(--dg-muted)" opacity="0.4"/><rect x="368" y="196" width="40" height="16" rx="4" fill="var(--dg-muted)" opacity="0.75"/><rect x="368" y="220" width="76" height="7" rx="4" fill="var(--dg-muted)" opacity="0.3"/><rect x="520" y="160" width="154" height="76" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="536" y="178" width="54" height="8" rx="4" fill="var(--dg-muted)" opacity="0.4"/><rect x="536" y="196" width="40" height="16" rx="4" fill="var(--dg-muted)" opacity="0.75"/><rect x="536" y="220" width="76" height="7" rx="4" fill="var(--dg-muted)" opacity="0.3"/><rect x="184" y="254" width="240" height="158" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75" stroke-dasharray="5 4"/><path d="M236.8 364.6 L280.0 326.68 L313.6 351.96 L342.4 329.84000000000003 L376.0 364.6 Z" fill="var(--dg-muted)" opacity="0.5"/><circle cx="352.0" cy="301.4" r="11.85" fill="var(--dg-muted)" opacity="0.5"/><rect x="440" y="254" width="234" height="158" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="458" y="274" width="88" height="9" rx="4" fill="var(--dg-muted)" opacity="0.55"/><circle cx="470" cy="300" r="9" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="470" cy="297.48" r="3.06" fill="var(--dg-violet)" opacity="0.75"/><path d="M465.05 305.58 Q470 300.45 474.95 305.58" fill="var(--dg-violet)" opacity="0.75"/><rect x="490" y="296" width="110" height="8" rx="4" fill="var(--dg-muted)" opacity="0.4"/><circle cx="470" cy="328" r="9" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="470" cy="325.48" r="3.06" fill="var(--dg-violet)" opacity="0.75"/><path d="M465.05 333.58 Q470 328.45 474.95 333.58" fill="var(--dg-violet)" opacity="0.75"/><rect x="490" y="324" width="110" height="8" rx="4" fill="var(--dg-muted)" opacity="0.4"/><circle cx="470" cy="356" r="9" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="470" cy="353.48" r="3.06" fill="var(--dg-violet)" opacity="0.75"/><path d="M465.05 361.58 Q470 356.45 474.95 361.58" fill="var(--dg-violet)" opacity="0.75"/><rect x="490" y="352" width="110" height="8" rx="4" fill="var(--dg-muted)" opacity="0.4"/><circle cx="470" cy="384" r="9" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="470" cy="381.48" r="3.06" fill="var(--dg-violet)" opacity="0.75"/><path d="M465.05 389.58 Q470 384.45 474.95 389.58" fill="var(--dg-violet)" opacity="0.75"/><rect x="490" y="380" width="110" height="8" rx="4" fill="var(--dg-muted)" opacity="0.4"/></svg>
+  <p class="figure-note">Wireframes drop the hues and work in <code>--dg-surface</code> / <code>--dg-border</code> greys, with a single accent for the primary action. Copy stays as <code>wf_bar</code> placeholder bars — real words invite bikeshedding about the words.</p>
+</div>
+
+<div class="figure narrow">
+  <div class="figure-group-title">Wireframe — mobile</div>
+  <svg viewBox="0 0 380 492" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mobile wireframe: phone frame with search, hero image, text block, two list rows and a four-item tab bar"><rect x="60" y="10" width="260" height="470" rx="30" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><rect x="148" y="24" width="84" height="12" rx="6" fill="var(--dg-border)" opacity="0.8"/><rect x="84" y="68" width="96" height="12" rx="4" fill="var(--dg-muted)" opacity="0.8"/><circle cx="292" cy="74" r="13" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="292" cy="70.36" r="4.42" fill="var(--dg-violet)" opacity="0.75"/><path d="M284.85 82.06 Q292 74.65 299.15 82.06" fill="var(--dg-violet)" opacity="0.75"/><rect x="84" y="100" width="212" height="30" rx="7" fill="none" stroke="var(--dg-border)" stroke-width="1.75"/><text x="96" y="119.0" font-size="11" fill="var(--dg-muted)">Search…</text><rect x="84" y="146" width="212" height="118" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75" stroke-dasharray="5 4"/><path d="M130.64 228.6 L168.8 200.28 L198.48000000000002 219.16 L223.92000000000002 202.64 L253.60000000000002 228.6 Z" fill="var(--dg-muted)" opacity="0.5"/><circle cx="232.39999999999998" cy="181.4" r="8.85" fill="var(--dg-muted)" opacity="0.5"/><rect x="84" y="280" width="150" height="10" rx="4" fill="var(--dg-muted)" opacity="0.7"/><rect x="84" y="300" width="200" height="8" rx="4" fill="var(--dg-muted)" opacity="0.35"/><rect x="84" y="316" width="176" height="8" rx="4" fill="var(--dg-muted)" opacity="0.35"/><rect x="84" y="348" width="212" height="40" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><circle cx="106" cy="368" r="11" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="106" cy="364.92" r="3.74" fill="var(--dg-violet)" opacity="0.75"/><path d="M99.95 374.82 Q106 368.55 112.05 374.82" fill="var(--dg-violet)" opacity="0.75"/><rect x="126" y="361" width="96" height="8" rx="4" fill="var(--dg-muted)" opacity="0.45"/><rect x="126" y="374" width="62" height="7" rx="4" fill="var(--dg-muted)" opacity="0.28"/><rect x="84" y="396" width="212" height="40" rx="8" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><circle cx="106" cy="416" r="11" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><circle cx="106" cy="412.92" r="3.74" fill="var(--dg-violet)" opacity="0.75"/><path d="M99.95 422.82 Q106 416.55 112.05 422.82" fill="var(--dg-violet)" opacity="0.75"/><rect x="126" y="409" width="96" height="8" rx="4" fill="var(--dg-muted)" opacity="0.45"/><rect x="126" y="422" width="62" height="7" rx="4" fill="var(--dg-muted)" opacity="0.28"/><path d="M60 446 H320" stroke="var(--dg-border)" stroke-width="1.75" fill="none"/><rect x="99" y="456" width="22" height="15" rx="4" fill="var(--brand-accent)" opacity="0.8"/><rect x="154" y="456" width="22" height="15" rx="4" fill="var(--dg-muted)" opacity="0.27999999999999997"/><rect x="209" y="456" width="22" height="15" rx="4" fill="var(--dg-muted)" opacity="0.27999999999999997"/><rect x="264" y="456" width="22" height="15" rx="4" fill="var(--dg-muted)" opacity="0.27999999999999997"/></svg>
+  <p class="figure-note">Same primitives at phone proportions. The active tab is the only element carrying the accent.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-group-title">Org chart</div>
+  <svg viewBox="0 0 860 276" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Org chart: a founder above three function leads, each with sub-teams"><path d="M430 64 V90" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round"/><path d="M110 112 V102 Q110 90 122 90 H738 Q750 90 750 102 V112" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round"/><path d="M430 90 V112" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round"/><path d="M110 166 V194" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round"/><path d="M80 216 V206 Q80 194 92 194 H203 Q215 194 215 206 V216" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round"/><path d="M430 166 V216" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round"/><path d="M750 166 V216" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round"/><rect x="350" y="10" width="160" height="54" rx="12" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><text x="430.0" y="34.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Founder</text><text x="430.0" y="50.0" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">the one accent</text><rect x="25" y="112" width="170" height="54" rx="12" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/><text x="110.0" y="136.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Engineering</text><text x="110.0" y="152.0" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">8 people</text><rect x="345" y="112" width="170" height="54" rx="12" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/><text x="430.0" y="136.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Design</text><text x="430.0" y="152.0" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">3 people</text><rect x="665" y="112" width="170" height="54" rx="12" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/><text x="750.0" y="136.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Go to market</text><text x="750.0" y="152.0" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">5 people</text><rect x="20" y="216" width="120" height="44" rx="12" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="80.0" y="242.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Platform</text><rect x="155" y="216" width="120" height="44" rx="12" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="215.0" y="242.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Product</text><rect x="370" y="216" width="120" height="44" rx="12" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="430.0" y="242.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Brand</text><rect x="690" y="216" width="120" height="44" rx="12" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="750.0" y="242.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Sales</text></svg>
+  <p class="figure-note">Edges have <strong>no arrowheads</strong> — reporting is a relationship, not a flow. One hue per level so depth reads at a glance, and the accent goes on the root. The rounded bridge is a single path: up from each child, <code>Q</code> corner, along the bus, <code>Q</code> corner, down.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-group-title">Sequence diagram</div>
+  <svg viewBox="0 0 860 384" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sequence diagram: a client posts an order, the API reserves stock, charges a card and returns 201"><defs><marker id="asq" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-line)"/></marker></defs><defs><marker id="asqr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L8 5 L0 9 z" fill="var(--dg-mint)"/></marker></defs><rect x="15" y="10" width="150" height="42" rx="10" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="90.0" y="35.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Client</text><path d="M90 52 V366" stroke="var(--dg-line)" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.75"/><rect x="225" y="10" width="150" height="42" rx="10" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/><text x="300.0" y="35.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">API</text><path d="M300 52 V366" stroke="var(--dg-line)" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.75"/><rect x="445" y="10" width="150" height="42" rx="10" fill="var(--dg-cyan-fill)" stroke="var(--dg-cyan)" stroke-width="1.75"/><text x="520.0" y="35.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Inventory</text><path d="M520 52 V366" stroke="var(--dg-line)" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.75"/><rect x="655" y="10" width="150" height="42" rx="10" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75"/><text x="730.0" y="35.5" text-anchor="middle" font-size="12" font-weight="600" fill="var(--dg-text)">Payments</text><path d="M730 52 V366" stroke="var(--dg-line)" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.75"/><rect x="294.5" y="90" width="11" height="254" rx="4" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.4"/><rect x="514.5" y="130" width="11" height="92" rx="4" fill="var(--dg-cyan-fill)" stroke="var(--dg-cyan)" stroke-width="1.4"/><rect x="724.5" y="258" width="11" height="42" rx="4" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.4"/><path d="M90 90 H293" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round" marker-end="url(#asq)"/><rect x="154.9" y="70" width="80.2" height="16" rx="4" fill="var(--brand-bg)"/><text x="195.0" y="82" text-anchor="middle" font-size="11" fill="var(--dg-muted)">POST /order</text><path d="M300 130 H513" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round" marker-end="url(#asq)"/><rect x="363.7" y="110" width="92.60000000000001" height="16" rx="4" fill="var(--brand-bg)"/><text x="410.0" y="122" text-anchor="middle" font-size="11" fill="var(--dg-muted)">reserve stock</text><path d="M520 168 H564 V194 H528" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#asq)"/><text x="572" y="185.0" font-size="11" fill="var(--dg-muted)">check levels</text><path d="M520 222 H307" fill="none" stroke="var(--dg-mint)" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="6 5" marker-end="url(#asqr)"/><rect x="379.2" y="202" width="61.6" height="16" rx="4" fill="var(--brand-bg)"/><text x="410.0" y="214" text-anchor="middle" font-size="11" fill="var(--dg-muted)">reserved</text><path d="M300 258 H723" fill="none" stroke="var(--dg-line)" stroke-width="1.6" stroke-linecap="round" marker-end="url(#asq)"/><rect x="474.9" y="238" width="80.2" height="16" rx="4" fill="var(--brand-bg)"/><text x="515.0" y="250" text-anchor="middle" font-size="11" fill="var(--dg-muted)">charge card</text><path d="M730 300 H307" fill="none" stroke="var(--dg-mint)" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="6 5" marker-end="url(#asqr)"/><rect x="487.3" y="280" width="55.4" height="16" rx="4" fill="var(--brand-bg)"/><text x="515.0" y="292" text-anchor="middle" font-size="11" fill="var(--dg-muted)">receipt</text><path d="M300 344 H97" fill="none" stroke="var(--dg-mint)" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="6 5" marker-end="url(#asqr)"/><rect x="154.9" y="324" width="80.2" height="16" rx="4" fill="var(--brand-bg)"/><text x="195.0" y="336" text-anchor="middle" font-size="11" fill="var(--dg-muted)">201 Created</text></svg>
+  <p class="figure-note">Participants sit in a header row over dashed lifelines; <code>seq_activation</code> bars show who is busy. Requests are solid and neutral, <em>returns are dashed and mint</em> — so you can read the round trips without following every label. Draw activation bars before the arrows so the arrowheads land on top.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-group-title">Timeline / Gantt</div>
+  <svg viewBox="0 0 860 312" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gantt timeline: five workstreams spanning five weeks with a today marker"><text x="216.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">WEEK 1</text><path d="M282.0 44 V294" stroke="var(--dg-border)" stroke-width="1.2" opacity="0.7"/><text x="348.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">WEEK 2</text><path d="M414.0 44 V294" stroke="var(--dg-border)" stroke-width="1.2" opacity="0.7"/><text x="480.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">WEEK 3</text><path d="M546.0 44 V294" stroke="var(--dg-border)" stroke-width="1.2" opacity="0.7"/><text x="612.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">WEEK 4</text><path d="M678.0 44 V294" stroke="var(--dg-border)" stroke-width="1.2" opacity="0.7"/><text x="744.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">WEEK 5</text><path d="M150 44 H810" stroke="var(--dg-border)" stroke-width="1.75"/><text x="134" y="83" text-anchor="end" font-size="11.5" fill="var(--dg-muted)">Discovery</text><path d="M150 102 H810" stroke="var(--dg-border)" stroke-width="1" opacity="0.45"/><rect x="154.0" y="66" width="203.20000000000002" height="26" rx="13.0" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.5"/><text x="168.0" y="83.0" font-size="11" font-weight="500" fill="var(--dg-text)"></text><text x="134" y="127" text-anchor="end" font-size="11.5" fill="var(--dg-muted)">Design</text><path d="M150 146 H810" stroke="var(--dg-border)" stroke-width="1" opacity="0.45"/><rect x="312.4" y="110" width="229.6" height="26" rx="13.0" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.5"/><text x="326.4" y="127.0" font-size="11" font-weight="500" fill="var(--dg-text)"></text><text x="134" y="171" text-anchor="end" font-size="11.5" fill="var(--dg-muted)">Build</text><path d="M150 190 H810" stroke="var(--dg-border)" stroke-width="1" opacity="0.45"/><rect x="470.8" y="154" width="282.40000000000003" height="26" rx="13.0" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.5"/><text x="484.8" y="171.0" font-size="11" font-weight="500" fill="var(--dg-text)"></text><text x="134" y="215" text-anchor="end" font-size="11.5" fill="var(--dg-muted)">QA</text><path d="M150 234 H810" stroke="var(--dg-border)" stroke-width="1" opacity="0.45"/><rect x="682.0" y="198" width="97.60000000000001" height="26" rx="13.0" fill="var(--dg-cyan-fill)" stroke="var(--dg-cyan)" stroke-width="1.5"/><text x="696.0" y="215.0" font-size="11" font-weight="500" fill="var(--dg-text)"></text><text x="134" y="259" text-anchor="end" font-size="11.5" fill="var(--dg-muted)">Launch prep</text><path d="M150 278 H810" stroke="var(--dg-border)" stroke-width="1" opacity="0.45"/><rect x="708.4" y="242" width="97.60000000000001" height="26" rx="13.0" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.5"/><text x="722.4" y="259.0" font-size="11" font-weight="500" fill="var(--dg-text)"></text><path d="M506.40000000000003 44 V284" stroke="var(--brand-accent)" stroke-width="1.6" stroke-dasharray="6 5"/><rect x="480.40000000000003" y="284" width="52" height="20" rx="10" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.4"/><text x="506.40000000000003" y="298" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--brand-accent)">today</text></svg>
+  <p class="figure-note">A column grid sets the time axis; every bar is positioned and sized in <em>column units</em> (<code>x = GX + cw * start</code>), never by eye — that is what keeps the bars honest. One hue per workstream, and the only accent is the <code>today</code> marker.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-group-title">Kanban board</div>
+  <svg viewBox="0 0 860 328" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kanban board with backlog, in progress, review and done columns"><rect x="14" y="14" width="200" height="300" rx="12" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><text x="30" y="40" font-size="12" font-weight="600" fill="var(--dg-text)">Backlog</text><text x="198" y="40" text-anchor="end" font-size="11" fill="var(--dg-muted)">4</text><rect x="26" y="56" width="176" height="58" rx="9" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1.4"/><text x="38" y="77" font-size="11.5" font-weight="500" fill="var(--dg-text)">Rate limit audit</text><rect x="38" y="86" width="54.0" height="22" rx="11" fill="var(--dg-cyan-fill)" stroke="var(--dg-cyan)" stroke-width="1.4"/><text x="65.0" y="101" text-anchor="middle" font-size="10.5" fill="var(--dg-cyan)">infra</text><rect x="26" y="128" width="176" height="58" rx="9" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1.4"/><text x="38" y="149" font-size="11.5" font-weight="500" fill="var(--dg-text)">Fix stale badge</text><rect x="26" y="200" width="176" height="58" rx="9" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1.4"/><text x="38" y="221" font-size="11.5" font-weight="500" fill="var(--dg-text)">Split deploy job</text><rect x="38" y="230" width="34.8" height="22" rx="11" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.4"/><text x="55.4" y="245" text-anchor="middle" font-size="10.5" fill="var(--dg-violet)">ci</text><rect x="226" y="14" width="200" height="300" rx="12" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><text x="242" y="40" font-size="12" font-weight="600" fill="var(--dg-text)">In progress</text><text x="410" y="40" text-anchor="end" font-size="11" fill="var(--dg-muted)">2</text><rect x="238" y="56" width="176" height="58" rx="9" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1.4"/><text x="250" y="77" font-size="11.5" font-weight="500" fill="var(--dg-text)">Wireframe onboarding</text><rect x="250" y="86" width="60.400000000000006" height="22" rx="11" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.4"/><text x="280.2" y="101" text-anchor="middle" font-size="10.5" fill="var(--dg-violet)">design</text><rect x="238" y="128" width="176" height="58" rx="9" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1.4"/><text x="250" y="149" font-size="11.5" font-weight="500" fill="var(--dg-text)">Postgres upgrade</text><rect x="250" y="158" width="54.0" height="22" rx="11" fill="var(--dg-cyan-fill)" stroke="var(--dg-cyan)" stroke-width="1.4"/><text x="277.0" y="173" text-anchor="middle" font-size="10.5" fill="var(--dg-cyan)">infra</text><rect x="438" y="14" width="200" height="300" rx="12" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><text x="454" y="40" font-size="12" font-weight="600" fill="var(--dg-text)">Review</text><text x="622" y="40" text-anchor="end" font-size="11" fill="var(--dg-muted)">1</text><rect x="450" y="56" width="176" height="58" rx="9" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1.4"/><text x="462" y="77" font-size="11.5" font-weight="500" fill="var(--dg-text)">Sequence diagram export</text><rect x="462" y="86" width="47.6" height="22" rx="11" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.4"/><text x="485.8" y="101" text-anchor="middle" font-size="10.5" fill="var(--dg-mint)">docs</text><rect x="650" y="14" width="200" height="300" rx="12" fill="var(--dg-surface)" stroke="var(--dg-border)" stroke-width="1.75"/><text x="666" y="40" font-size="12" font-weight="600" fill="var(--dg-text)">Done</text><text x="834" y="40" text-anchor="end" font-size="11" fill="var(--dg-muted)">3</text><rect x="662" y="56" width="176" height="58" rx="9" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1.4"/><text x="674" y="77" font-size="11.5" font-weight="500" fill="var(--dg-text)">Token parity check</text><rect x="662" y="128" width="176" height="58" rx="9" fill="var(--brand-bg)" stroke="var(--dg-border)" stroke-width="1.4"/><text x="674" y="149" font-size="11.5" font-weight="500" fill="var(--dg-text)">Flat diagram style</text><rect x="674" y="158" width="66.80000000000001" height="22" rx="11" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.4"/><text x="707.4" y="173" text-anchor="middle" font-size="10.5" fill="var(--dg-mint)">shipped</text></svg>
+  <p class="figure-note">Columns are <code>--dg-surface</code> containers; cards sit on <code>--brand-bg</code> so they read as lifted without needing a shadow. Tags carry the hue — the card itself stays neutral, otherwise four columns of coloured cards becomes noise.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-group-title">User journey map</div>
+  <svg viewBox="0 0 860 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="User journey map across five stages with doing, feeling and opportunity rows"><text x="199.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">DISCOVER</text><path d="M268.0 44 V302" stroke="var(--dg-border)" stroke-width="1.2" opacity="0.7"/><text x="337.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">EVALUATE</text><path d="M406.0 44 V302" stroke="var(--dg-border)" stroke-width="1.2" opacity="0.7"/><text x="475.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">SIGN UP</text><path d="M544.0 44 V302" stroke="var(--dg-border)" stroke-width="1.2" opacity="0.7"/><text x="613.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">FIRST RUN</text><path d="M682.0 44 V302" stroke="var(--dg-border)" stroke-width="1.2" opacity="0.7"/><text x="751.0" y="34" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.14em" fill="var(--dg-muted)">HABIT</text><path d="M130 44 H820" stroke="var(--dg-border)" stroke-width="1.75"/><text x="114" y="92" text-anchor="end" font-size="10.5" font-weight="600" letter-spacing="0.12em" fill="var(--dg-muted)">DOING</text><rect x="136.0" y="50" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><text x="199.0" y="84.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">reads a</text><text x="199.0" y="98.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">blog post</text><rect x="274.0" y="50" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><text x="337.0" y="84.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">compares</text><text x="337.0" y="98.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">3 tools</text><rect x="412.0" y="50" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><text x="475.0" y="84.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">creates</text><text x="475.0" y="98.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">an account</text><rect x="550.0" y="50" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><text x="613.0" y="84.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">runs</text><text x="613.0" y="98.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">the demo</text><rect x="688.0" y="50" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><text x="751.0" y="84.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">invites</text><text x="751.0" y="98.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">a teammate</text><text x="114" y="178" text-anchor="end" font-size="10.5" font-weight="600" letter-spacing="0.12em" fill="var(--dg-muted)">FEELING</text><path d="M130 130 H820" stroke="var(--dg-border)" stroke-width="1" opacity="0.45"/><rect x="136.0" y="136" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><circle cx="199.0" cy="173.0" r="13" fill="var(--dg-amber)" opacity="0.22"/><circle cx="194.5" cy="170.0" r="1.7" fill="var(--dg-amber)"/><circle cx="203.5" cy="170.0" r="1.7" fill="var(--dg-amber)"/><path d="M193.0 178.0 H205.0" stroke="var(--dg-amber)" stroke-width="1.8" stroke-linecap="round"/><rect x="274.0" y="136" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><circle cx="337.0" cy="173.0" r="13" fill="var(--dg-rose)" opacity="0.22"/><circle cx="332.5" cy="170.0" r="1.7" fill="var(--dg-rose)"/><circle cx="341.5" cy="170.0" r="1.7" fill="var(--dg-rose)"/><path d="M331.0 180.0 Q337.0 174.0 343.0 180.0" fill="none" stroke="var(--dg-rose)" stroke-width="1.8" stroke-linecap="round"/><rect x="412.0" y="136" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><circle cx="475.0" cy="173.0" r="13" fill="var(--dg-amber)" opacity="0.22"/><circle cx="470.5" cy="170.0" r="1.7" fill="var(--dg-amber)"/><circle cx="479.5" cy="170.0" r="1.7" fill="var(--dg-amber)"/><path d="M469.0 178.0 H481.0" stroke="var(--dg-amber)" stroke-width="1.8" stroke-linecap="round"/><rect x="550.0" y="136" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><circle cx="613.0" cy="173.0" r="13" fill="var(--dg-mint)" opacity="0.22"/><circle cx="608.5" cy="170.0" r="1.7" fill="var(--dg-mint)"/><circle cx="617.5" cy="170.0" r="1.7" fill="var(--dg-mint)"/><path d="M607.0 176.0 Q613.0 182.0 619.0 176.0" fill="none" stroke="var(--dg-mint)" stroke-width="1.8" stroke-linecap="round"/><rect x="688.0" y="136" width="126.0" height="74" rx="9" fill="none" stroke="var(--dg-border)" stroke-width="1.4"/><circle cx="751.0" cy="173.0" r="13" fill="var(--dg-mint)" opacity="0.22"/><circle cx="746.5" cy="170.0" r="1.7" fill="var(--dg-mint)"/><circle cx="755.5" cy="170.0" r="1.7" fill="var(--dg-mint)"/><path d="M745.0 176.0 Q751.0 182.0 757.0 176.0" fill="none" stroke="var(--dg-mint)" stroke-width="1.8" stroke-linecap="round"/><text x="114" y="264" text-anchor="end" font-size="10.5" font-weight="600" letter-spacing="0.12em" fill="var(--dg-muted)">OPPORTUNITY</text><path d="M130 216 H820" stroke="var(--dg-border)" stroke-width="1" opacity="0.45"/><rect x="136.0" y="222" width="126.0" height="74" rx="9" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.4"/><text x="199.0" y="256.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">SEO</text><text x="199.0" y="270.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">landing pages</text><rect x="274.0" y="222" width="126.0" height="74" rx="9" fill="var(--dg-rose-fill)" stroke="var(--dg-rose)" stroke-width="1.4"/><text x="337.0" y="263.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">comparison page</text><rect x="412.0" y="222" width="126.0" height="74" rx="9" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.4"/><text x="475.0" y="256.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">SSO on</text><text x="475.0" y="270.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">day one</text><rect x="550.0" y="222" width="126.0" height="74" rx="9" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.4"/><text x="613.0" y="263.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">sample project</text><rect x="688.0" y="222" width="126.0" height="74" rx="9" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.4"/><text x="751.0" y="256.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">team</text><text x="751.0" y="270.0" text-anchor="middle" font-size="10.5" fill="var(--dg-text)">invite nudge</text></svg>
+  <p class="figure-note">Stages are columns, lenses are rows. The <em>Feeling</em> row uses faces rather than words so the emotional dip is visible at a glance — that dip is the whole point of the artifact. Opportunities take a hue by sentiment: mint for a clear win, rose where the journey is actively losing people.</p>
+</div>
+
+<div class="figure">
+  <div class="figure-group-title">Mindmap</div>
+  <svg viewBox="0 0 860 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mindmap: a Q3 roadmap centre node with Discovery, Design, Build and Launch branches, each with two leaves"><path d="M342 176 C260 176 280 88 246 88" fill="none" stroke="var(--dg-blue)" stroke-width="1.75" stroke-linecap="round"/><rect x="114" y="66" width="132" height="44" rx="22.0" fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/><text x="180.0" y="92.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Discovery</text><path d="M180 110 C180 124 178 140 170 140" fill="none" stroke="var(--dg-blue)" stroke-width="1.4" opacity="0.6"/><path d="M170 140 H96.0" stroke="var(--dg-blue)" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/><text x="166" y="133" text-anchor="end" font-size="12" fill="var(--dg-muted)">Interviews</text><path d="M180 110 C180 158 178 174 170 174" fill="none" stroke="var(--dg-blue)" stroke-width="1.4" opacity="0.6"/><path d="M170 174 H56.400000000000006" stroke="var(--dg-blue)" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/><text x="166" y="167" text-anchor="end" font-size="12" fill="var(--dg-muted)">Analytics review</text><path d="M342 176 C260 176 280 262 246 262" fill="none" stroke="var(--dg-mint)" stroke-width="1.75" stroke-linecap="round"/><rect x="114" y="240" width="132" height="44" rx="22.0" fill="var(--dg-mint-fill)" stroke="var(--dg-mint)" stroke-width="1.75"/><text x="180.0" y="266.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Design</text><path d="M180 284 C180 298 178 314 170 314" fill="none" stroke="var(--dg-mint)" stroke-width="1.4" opacity="0.6"/><path d="M170 314 H96.0" stroke="var(--dg-mint)" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/><text x="166" y="307" text-anchor="end" font-size="12" fill="var(--dg-muted)">Wireframes</text><path d="M180 284 C180 332 178 348 170 348" fill="none" stroke="var(--dg-mint)" stroke-width="1.4" opacity="0.6"/><path d="M170 348 H76.2" stroke="var(--dg-mint)" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/><text x="166" y="341" text-anchor="end" font-size="12" fill="var(--dg-muted)">Design review</text><path d="M518 176 C600 176 580 88 614 88" fill="none" stroke="var(--dg-violet)" stroke-width="1.75" stroke-linecap="round"/><rect x="614" y="66" width="132" height="44" rx="22.0" fill="var(--dg-violet-fill)" stroke="var(--dg-violet)" stroke-width="1.75"/><text x="680.0" y="92.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Build</text><path d="M680 110 C680 124 682 140 690 140" fill="none" stroke="var(--dg-violet)" stroke-width="1.4" opacity="0.6"/><path d="M690 140 H731.0" stroke="var(--dg-violet)" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/><text x="694" y="133" text-anchor="start" font-size="12" fill="var(--dg-muted)">Spike</text><path d="M680 110 C680 158 682 174 690 174" fill="none" stroke="var(--dg-violet)" stroke-width="1.4" opacity="0.6"/><path d="M690 174 H783.8" stroke="var(--dg-violet)" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/><text x="694" y="167" text-anchor="start" font-size="12" fill="var(--dg-muted)">Feature flags</text><path d="M518 176 C600 176 580 262 614 262" fill="none" stroke="var(--dg-amber)" stroke-width="1.75" stroke-linecap="round"/><rect x="614" y="240" width="132" height="44" rx="22.0" fill="var(--dg-amber-fill)" stroke="var(--dg-amber)" stroke-width="1.75"/><text x="680.0" y="266.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Launch</text><path d="M680 284 C680 298 682 314 690 314" fill="none" stroke="var(--dg-amber)" stroke-width="1.4" opacity="0.6"/><path d="M690 314 H770.6" stroke="var(--dg-amber)" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/><text x="694" y="307" text-anchor="start" font-size="12" fill="var(--dg-muted)">Beta cohort</text><path d="M680 284 C680 332 682 348 690 348" fill="none" stroke="var(--dg-amber)" stroke-width="1.4" opacity="0.6"/><path d="M690 348 H777.2" stroke="var(--dg-amber)" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/><text x="694" y="341" text-anchor="start" font-size="12" fill="var(--dg-muted)">Rollout plan</text><rect x="342" y="142" width="176" height="68" rx="12" fill="var(--dg-accent-fill)" stroke="var(--brand-accent)" stroke-width="1.75"/><text x="430.0" y="173.0" text-anchor="middle" font-size="13" font-weight="600" fill="var(--dg-text)">Q3 Roadmap</text><text x="430.0" y="189.0" text-anchor="middle" font-size="10.5" fill="var(--dg-muted)">four workstreams</text></svg>
+  <p class="figure-note">Centre node takes the accent; every branch owns one hue and its connectors and leaf underlines inherit it. Branches balance left and right so the centre stays centred. Leaves are text on a tinted rule rather than boxes — boxing every leaf turns a mindmap into an org chart.</p>
+</div>
+</main>
+
+<!-- ================================================================
+     THEME TOGGLE
+================================================================ -->
+<button id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle dark/light mode (T)">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+  </svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>
+  </svg>
+</button>
+
+<script>
+  /* Dark/light toggle — button or "T". Remembers the choice. */
+  (function () {
+    const root = document.documentElement;
+    const btn  = document.getElementById('themeToggle');
+    root.setAttribute('data-theme', localStorage.getItem('soft-visual-theme') || 'dark');
+
+    function toggle() {
+      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('soft-visual-theme', next);
+    }
+
+    btn.addEventListener('click', toggle);
+    document.addEventListener('keydown', e => {
+      if (e.key === 't' || e.key === 'T') { e.preventDefault(); toggle(); }
+    });
+  })();
+</script>
+
+</body>
+</html>

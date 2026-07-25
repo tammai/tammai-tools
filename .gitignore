@@ -1,3 +1,5 @@
 .DS_Store
 evals/
 *.plugin
+__pycache__/
+*.pyc

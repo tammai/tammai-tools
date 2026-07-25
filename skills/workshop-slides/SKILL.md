@@ -17,6 +17,28 @@ description: >
 Generates a polished, fully self-contained HTML slide deck using the BigIn design system.
 Output is a single `.html` file the user opens directly in any browser — no server needed.
 
+## What every generated deck ships with
+
+These come from the template — you get them for free, and should mention them when handing the deck over:
+
+| Feature | Detail |
+|---|---|
+| Fixed 16:9 stage | Slides are authored against a fixed **1280×720** canvas that scales to fit any viewport, so a deck looks identical on a laptop, a projector, and a phone |
+| Dark / light mode | Toggle button (top right) or press **T**; the choice persists in `localStorage` under `workshop-deck-theme`. Light mode reverses the slate scale and keeps the accent color |
+| Fullscreen | Toggle button (top right) or press **F** |
+| Keyboard nav | **← → ↑ ↓ Space PageUp PageDown** |
+| Touch | Horizontal swipe on phones and tablets |
+| Print / PDF | An `@media print` block lays the deck out one slide per page at 16:9 |
+
+Because slides are a fixed 720 px tall and clipped (not scrollable), **content that overruns is silently cut off**. Keep slides sparse; split rather than shrink.
+
+## Exporting to PDF
+
+Two routes — mention the second when the user wants a file to send round:
+
+1. **Cmd-P / Ctrl-P** in the browser. Zero dependencies, uses the template's `@media print` rules. Fine for a quick copy.
+2. **The `slides-to-pdf` skill** (in this same plugin). Higher fidelity, one page per slide, a PDF bookmark per slide title, `--theme light` support, and it warns when a slide's content was clipped. Prefer this when the PDF matters.
+
 ## Step 1 — Gather content
 
 Before generating, ensure you have:
@@ -46,14 +68,14 @@ Use `AskUserQuestion` to present exactly **two** choices:
 
 | Option | Label | Description |
 |---|---|---|
-| A | Use BigIn preset | Dark slate + orange accent, Google Sans / Space Grotesk, BigIn watermark. Ready now. |
+| A | Use BigIn preset | Dark slate + orange accent, Google Sans throughout, JetBrains Mono for code, BigIn watermark. Ready now. |
 | B | Create my own preset | Define your brand colors, fonts, and logo — saved for all future decks. |
 
 **If a saved preset exists** (read the `name` field from the JSON):
 
 | Option | Label | Description |
 |---|---|---|
-| A | Use BigIn preset | Dark slate + orange accent, Google Sans / Space Grotesk, BigIn watermark. |
+| A | Use BigIn preset | Dark slate + orange accent, Google Sans throughout, JetBrains Mono for code, BigIn watermark. |
 | B | Use my "[name]" preset | Show the saved accent color and font names from the JSON file. |
 
 Include a third option in the saved-preset case: **"Update my preset"** — re-collect all fields and overwrite the saved file.
@@ -148,17 +170,27 @@ When applying any non-BigIn preset, update the template:
 
 **Watermark** — replace the `<svg>` inside `<div id="watermark">` with the `watermark` value from the preset. If `watermark` is empty, remove the `<div id="watermark">` entirely.
 
-## Step 2 — Read the template
+## Step 2 — Read the template and the reference deck
 
 Read the template from **`assets/template.html`** (in the same directory as this SKILL.md).
 
+**Also read `demo.html`** in that same directory. It is a complete 15-slide reference deck where every slide carries an HTML comment naming the components and layout it demonstrates:
+
+```html
+<!-- 04 · TWO COLUMNS · .col-label muted vs accent · .list · strong + em -->
+```
+
+Copy the closest pattern from `demo.html` and swap the content. Do not re-derive markup from scratch — the demo is the source of truth for how components compose, and it covers: cover, section dividers, 1/2/3-column bodies, bullet and numbered lists, prose, callouts (full and compact), code blocks (bash and yaml, two side by side), comparison tables, stat blocks, tag blocks, tags, inline-SVG diagrams, source citations, and spacers.
+
 You will:
 1. Keep the entire `<head>` (fonts, CSS variables, all style rules) **unchanged**
-2. Keep the `#bg` background div, `#watermark`, `#navigator`, and `<script>` block **unchanged**
+2. Keep `#bg`, `#watermark`, `#navigator`, `#themeToggle`, `#fullscreenToggle`, and the `<script>` block **unchanged** — the toggles and the scaling/swipe logic live there
 3. Replace only the contents of `<div id="deck">` with the user's slides
 4. Save the resulting file to the outputs folder as `[kebab-case-title]-slides.html`
 
 ## Step 3 — Build slides
+
+Patterns below are the quick reference; `demo.html` shows each one in a finished slide.
 
 ### Every slide — base structure
 
@@ -266,18 +298,95 @@ You will:
 <div class="callout">
   "Memorable insight or key principle goes here."
 </div>
+
+<!-- compact variant — smaller type, use when pairing with other content in a column -->
+<div class="callout compact">"Shorter aside that shouldn't dominate the slide."</div>
 ```
 
 #### Code block
+Wrap **every line in its own `.code-line`**. The block is not a `<pre>`, so raw source newlines collapse into spaces and the whole snippet reflows into a paragraph. Use `.code-line blank` for a vertical gap.
+
 ```html
 <div class="code-block">
   <div class="code-lang">python</div>
-  <span class="cmt"># comment</span>
-  <span class="kw">def</span> <span class="fn">greet</span>(name):
-      <span class="kw">return</span> <span class="str">f"Hello, {name}"</span>
+  <div class="code-line"><span class="cmt"># comment</span></div>
+  <div class="code-line"><span class="kw">def</span> <span class="fn">greet</span>(name):</div>
+  <div class="code-line">    <span class="kw">return</span> <span class="str">f"Hello, {name}"</span></div>
+  <div class="code-line blank"></div>
+  <div class="code-line"><span class="fn">greet</span>(<span class="str">"world"</span>)</div>
 </div>
 ```
-Syntax classes: `.kw` (keyword, orange), `.fn` (function name, light), `.str` (string, muted), `.cmt` (comment, dim). Only wrap tokens you want highlighted — plain text renders in default slate-200.
+Syntax classes: `.kw` (keyword, orange), `.fn` (function name, light), `.str` (string, muted), `.cmt` (comment, dim). Only wrap tokens you want highlighted — plain text renders in default slate-200. Lines that overflow are clipped with an ellipsis rather than wrapping, so keep them under ~52 characters.
+
+#### Comparison table
+For criterion-by-criterion comparisons. Column 2 is styled as the recommended option (accent header), column 3 as the alternative (muted) — put the option you're advocating in the middle column.
+
+```html
+<table class="cmp-table">
+  <colgroup><col class="c-crit"><col class="c-cell"><col class="c-cell"></colgroup>
+  <thead>
+    <tr><th>Criteria</th><th>Recommended</th><th>Alternative</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="cmp-crit">Deploy</td>
+      <td>One manifest, reviewed in a PR</td>
+      <td>SSH plus a runbook</td>
+    </tr>
+  </tbody>
+</table>
+```
+Keep to **5–6 rows** and short cells; the table does not scroll and longer content will be clipped.
+
+#### Diagram — inline SVG, soft flat style
+For architecture and flow diagrams. Inline SVG keeps the deck self-contained (no image files to ship alongside it) and theme-aware. See slide 09 of `demo.html` for the full worked example.
+
+For anything bigger than one small diagram — a full flowchart, a wireframe, a mindmap — use the **`soft-visuals`** skill instead and paste its `<svg>` in here. It shares this exact token set and ships a gallery of twelve shapes and five connector styles.
+
+The style comes from the `--dg-*` tokens in the template:
+
+| Token | Use |
+|---|---|
+| `--dg-blue` / `--dg-blue-fill` | Card border / translucent fill. Also `violet`, `mint`, `amber` |
+| `--dg-accent-fill` | Fill paired with `var(--brand-accent)` — use for the *one* node you're highlighting |
+| `--dg-text` / `--dg-muted` | Card title / caption |
+| `--dg-line` | Connectors and arrowheads |
+
+```html
+<svg class="diagram" viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-label="Describe the diagram for screen readers">
+  <defs>
+    <marker id="dgArrow" viewBox="0 0 10 10" refX="7" refY="5"
+            markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 1 L8 5 L0 9 z" fill="var(--dg-line)"/>
+    </marker>
+  </defs>
+
+  <!-- Connectors first, so cards paint over the line ends.
+       Q curves make the rounded elbow: run, Q corner, turn, Q corner, run -->
+  <g fill="none" stroke="var(--dg-line)" stroke-width="1.75"
+     stroke-linecap="round" stroke-linejoin="round" marker-end="url(#dgArrow)">
+    <path d="M230 68 V112"/>
+    <path d="M230 176 V194 Q230 206 218 206 H79 Q67 206 67 218 V240"/>
+  </g>
+
+  <!-- Card = body, then title + caption. No shadow — the style is flat. -->
+  <rect x="150" y="10" width="160" height="52" rx="12"
+        fill="var(--dg-blue-fill)" stroke="var(--dg-blue)" stroke-width="1.75"/>
+  <text x="230" y="33" text-anchor="middle" font-size="15" font-weight="600"
+        fill="var(--dg-text)">Ingress</text>
+  <text x="230" y="50" text-anchor="middle" font-size="11"
+        fill="var(--dg-muted)">TLS · routes by host</text>
+</svg>
+```
+
+Rules:
+
+- **The style is flat — no shadows at all.** Never `filter:` or `feDropShadow`: a filtered region forces Chrome's print-to-PDF to rasterise that area into a bitmap, so the slide stops being pure vector. Don't fake one with an offset rect either — it peeks out from under the shape's own border in light mode and reads as a misaligned fill. On a dark background a blurred shadow is invisible anyway, so nothing is lost.
+- **Use the translucent `*-fill` tokens, not solid colors.** A 16% wash reads as a muted tint on the dark page and a pastel on the light one, so one value covers both themes.
+- Give the diagram **one** accent-colored node; everything else takes a supporting hue. More than one focal point and the emphasis is gone.
+- `var()` works in SVG presentation attributes (`fill`, `stroke`, `font-family`, even `rx`). The only caveat: presentation attributes have the lowest priority, so any CSS rule overrides them.
+- Keep the `role="img"` and a real `aria-label` describing the diagram.
 
 #### Stats block (use inside `cols-2` or `cols-3`)
 ```html
@@ -302,6 +411,28 @@ Use the muted variant for the "before / old / traditional" side in comparisons; 
 </div>
 ```
 
+#### Tag blocks — stacked value + label chips
+A middle ground between a `.tag` and a full `.stat-block`: good for a row of metadata (licence, date, price, count). Wrap them in `.tags` to get the flex row and wrapping.
+
+```html
+<div class="tags">
+  <div class="tag-block accent">
+    <div class="tag-main">6 min</div>
+    <div class="tag-sub">median deploy</div>
+  </div>
+  <div class="tag-block">
+    <div class="tag-main">MIT</div>
+    <div class="tag-sub">open source</div>
+  </div>
+</div>
+```
+Both `.tag-main` and `.tag-sub` are `white-space: nowrap` — keep them to one or two words.
+
+#### Source citation inside a list item
+```html
+<li>Claim that needs attribution <span class="src">— Source, 2026</span></li>
+```
+
 #### Spacer — pushes subsequent content to the bottom of a column
 ```html
 <div class="spacer"></div>
@@ -314,14 +445,17 @@ Use the muted variant for the "before / old / traditional" side in comparisons; 
 - Highlight 1–2 key words per title with `<span style="color:var(--brand-accent)">` for visual punch.
 - Use section dividers to create breathing room before major topic shifts.
 - Stats slides shine with exactly 3 columns and short, punchy numbers.
-- Comparison slides (before/after): muted col-label left, orange col-label right.
+- Comparison slides: two columns with muted col-label left / orange right for a short before-after, or `.cmp-table` when you have 4+ criteria to line up.
 - End with a closing slide: section divider or cover variant with a call-to-action.
 - Aim for 6–12 slides total. More than 15 is usually too many for a workshop.
+- Both light and dark are first-class — avoid hardcoded hex colors in slide markup. Use `var(--brand-accent)` and the `--slate-*` scale so the deck stays legible when the user presses **T**.
 
 ## Pre-save checklist
 
 - [ ] First slide has `active` class; no other slide does
 - [ ] Slide numbers are two-digit and sequential: `01`, `02`, `03` …
 - [ ] No demo content from the template remains
-- [ ] `<head>`, watermark, navigator, and `<script>` are byte-for-byte identical to the template
+- [ ] Every code line is wrapped in its own `.code-line` (otherwise the snippet reflows into one paragraph)
+- [ ] No hardcoded colors in slide markup — only `var(--brand-accent)` / `--slate-*`
+- [ ] `<head>`, watermark, toggles, navigator, and `<script>` are byte-for-byte identical to the template
 - [ ] File is saved to the outputs folder with a descriptive kebab-case name

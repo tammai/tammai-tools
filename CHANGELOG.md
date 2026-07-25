@@ -6,6 +6,55 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-07-25
+
+### Added
+- **`soft-visuals` skill** — generates soft, flat, pastel visuals (the Whimsical-style look) as self-contained inline SVG in a single `.html` file with a dark/light toggle:
+  - **Nine visual types**: flowchart, architecture diagram, wireframe (desktop + mobile), mindmap, org chart, sequence diagram, Gantt timeline, kanban board, user journey map
+  - **18 shapes** — card, pill, diamond, cylinder, hexagon, parallelogram (+ flipped), trapezoid, triangle, circle, doc, note, annotation (pointer tail), bracket, actor, sequence actor, cloud, dashed group boundary
+  - **22 wireframe components** — button (+ outline), text input, textarea, dropdown, checkbox, radio, toggle, slider, progress bar, tabs (horizontal/vertical/mobile), tooltip, modal overlay, stars, tag, video, map, image, avatar, text block — and **5 device frames** (plain, window, phone, tablet, watch)
+  - Six connector styles — straight, rounded elbow, curve, dashed, labelled chip, hue-matched — plus annotation leaders (dashed, no arrowhead, since an arrow means flow and a note is not a step)
+  - Layout rules encoded per type: Gantt bars positioned in **column units** rather than by eye; org-chart edges deliberately arrowless; sequence returns dashed and mint so round trips read without labels; journey-map *Feeling* row uses mood faces so the emotional dip is visible without reading
+  - `assets/gallery.html` renders every shape, connector and layout as a copy-from reference, each `<svg>` self-contained with its own uniquely-named marker so single cells can be lifted out
+  - `--dg-*` tokens are shared **verbatim** with the `workshop-slides` template, so a generated `<svg>` pastes into a slide deck with no edits
+  - `.figure.narrow` / `.figure.medium` cap portrait and small visuals instead of stretching a phone mockup to full canvas width
+  - `skills/soft-visuals/demo.html` — worked example and end-to-end check: all nine visual types describing one product so the types can be compared, each figure captioned with the prompt that produced it. Because it is built the way the skill prescribes, a defect in a `gallery.html` pattern surfaces here rather than in a user's output
+  - Hue is treated as a cross-figure vocabulary, not per-figure decoration — the same system keeps its hue in every figure of a file, and two different kinds of thing (internal compute vs. a third-party `cloud`) must not collide on one hue
+  - Connectors must **start** on their source's edge as well as stopping short of the target's; a line beginning in the gap beside its source reads as belonging to nothing. Shapes whose visible edge is not their bounding box are called out (a `cylinder` drawn from `y=309` with `ry=9` has its top at 300)
+  - The one-accent rule is **at most** one, not exactly one: kanban boards (hue lives in the tags) and journey maps (hue is sentiment) carry their meaning entirely in hue and correctly take no accent at all
+- **`slides-to-pdf` skill** — exports a `workshop-slides` HTML deck to a single multi-page PDF, one page per slide
+- `skills/slides-to-pdf/assets/slides_to_pdf.py` — Playwright + pypdf converter:
+  - Drives headless Chromium's print-to-PDF once per slide, since the deck stacks all slides at `inset: 0` and shows only the `.active` one — a plain `chromium --print-to-pdf` yields a single-page PDF
+  - 1280 × 720 px pages (960 × 540 pt, 13.333 × 7.5 in) — true 16:9, matching PowerPoint/Keynote widescreen
+  - Resolution-independent output: vector text (selectable and searchable), vector gradients and borders, raster images passed through at native resolution — sharp at any zoom without a 2× raster pass. `deviceScaleFactor` is set to 2 but measurably does not alter the PDF (identical output at 1×/2×/3×)
+  - `printBackground: true` + `print-color-adjust: exact` — dark background, radial gradients, accent colors, callout tints, and code-block fills all survive
+  - `emulateMedia({ media: 'screen' })` so the deck's screen styling is what gets printed
+  - Waits on `document.fonts.ready` for Google Fonts, warning and falling back rather than failing when offline
+  - Hides interactive chrome by default — `#navigator` plus any `<button>` outside `#deck`, which covers the theme and fullscreen toggles
+  - Merges pages with pypdf, adding a PDF bookmark per slide from its `.slide-title`
+  - Measures each slide against the page box and warns when content was silently cropped — slides are pinned inside an `overflow: hidden` body, so overflow is cut off rather than spilling onto a second page
+  - Flags: `--output`, `--width`, `--height`, `--device-scale`, `--keep-ui`, `--theme dark|light|as-is`, `--timeout`
+- **Soft, flat diagram style** — `--dg-*` tokens plus a `.diagram` class for inline-SVG architecture/flow diagrams: rounded cards with translucent hue fills and matching borders, title + muted caption per card, and neutral rounded elbow connectors with arrow markers. Hue fills are translucent so a single value reads as a muted tint on the dark page and a pastel on the light one. Deliberately **shadowless**: `feDropShadow` was measured to rasterise the filtered region into a bitmap in the PDF export, and a faked offset-rect shadow peeked out under the card border in light mode. Token set extended with `rose`, `cyan`, `--dg-border` and `--dg-surface` so it matches `soft-visuals` exactly
+- New template components: `.cmp-table` (criterion comparison table), `.tag-block` / `.tag-main` / `.tag-sub` (stacked value+label chips), `.callout.compact`, `.code-line` / `.code-line.blank` (code blocks are not `<pre>`, so each line needs its own element or the snippet reflows into a paragraph), `.list li .src` (inline source citation)
+- Inline `<code>` now uses the mono family explicitly instead of the browser default
+- `<em>` renders accent-colored and non-italic inside `.list` items and `.callout` too, not just `.text` — one consistent rule wherever authors use it
+
+### Changed
+- **`workshop-slides` template overhauled** — brought in line with the newer deck structure that had drifted ahead of this repo. BigIn colors (orange `#f97316` / slate `#020617`) are unchanged:
+  - Dark/light mode toggle (button or **T**), persisted in `localStorage` as `workshop-deck-theme`; light mode reverses the slate scale and keeps the accent
+  - Fullscreen toggle (button or **F**)
+  - Fixed 1280×720 stage that scales to any viewport, so decks render identically on laptop, projector, and phone
+  - Swipe navigation for phones and tablets
+  - `@media print` block for one-slide-per-page Cmd-P export
+  - `text-wrap: balance` on titles, `pretty` + `62ch` cap on subtitles
+- **Typography simplified** — Google Sans for headings *and* body; JetBrains Mono reserved for code only (`.code-block` plus inline `<code>`). Space Grotesk dropped. Google Sans is requested as a variable font over `wght 400..700` rather than a fixed `400;500;700` list, because the deck uses weight 600 in several places and it was previously being synthesised
+- **`demo.html` rebuilt as a 15-slide reference deck** — every slide carries an HTML comment naming the components and layout it demonstrates, so generation can copy a working pattern instead of inventing markup. Covers cover, section dividers, 1/2/3-column bodies, bullet + numbered lists, prose, callouts (full + compact), bash and yaml code blocks (including two side by side), comparison table, stat blocks, tag blocks, tags, an inline-SVG diagram, source citations, and spacers
+- List bullets are absolutely positioned instead of flex-centered — on a wrapped multi-line item the bullet aligns to the first line rather than floating to the vertical middle
+- `.stat-number` reduced from 7.5rem to 4.2rem with `nowrap`, so multi-character stats like `6 min` no longer wrap
+
+### Fixed
+- Deck scaling guarded against a zero or NaN viewport (hidden iframe, snapshot renderer, or a call before first layout), which previously computed `scale(0)` and rendered a completely blank deck
+
 ## [0.2.2] — 2026-06-22
 
 ### Changed
