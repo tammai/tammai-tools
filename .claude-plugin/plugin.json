@@ -1,7 +1,7 @@
 {
   "name": "tammai-tools",
-  "version": "0.3.0",
-  "description": "A collection of workshop and presentation tools by Tam Mai. Generate polished HTML slide decks on the BigIn design system, soft flat diagrams, wireframes and mindmaps, and export decks to print-ready PDF.",
+  "version": "0.3.1",
+  "description": "A collection of workshop and presentation tools by Tam Mai. Generate polished HTML slide decks on the BigIn design system, soft flat diagrams, wireframes, mindmaps, boards and timelines, and export decks to print-ready PDF.",
   "author": {
     "name": "Tam Mai",
     "email": "tam.mai@bigin.vn"
@@ -14,8 +14,17 @@
     "export",
     "bigin",
     "diagram",
+    "svg",
+    "flowchart",
+    "architecture",
     "wireframe",
     "mindmap",
-    "svg"
+    "org-chart",
+    "sequence-diagram",
+    "gantt",
+    "timeline",
+    "roadmap",
+    "kanban",
+    "user-journey"
   ]
 }

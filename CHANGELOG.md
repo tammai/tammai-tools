@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-07-25
+
+### Changed
+- Plugin keywords widened to cover every `soft-visuals` type, not just the three that happened to be listed. `flowchart`, `architecture`, `org-chart`, `sequence-diagram`, `gantt`, `timeline`, `roadmap`, `kanban` and `user-journey` added; `diagram`, `wireframe`, `mindmap` and `svg` kept. Six of the nine visual types were previously unsearchable in the marketplace despite being fully implemented
+- Plugin description now reads "…diagrams, wireframes, mindmaps, boards and timelines" — the board and timeline types (kanban, Gantt, journey map) were absent from it
+- Both changes applied to `plugin.json` **and** `.claude-plugin/marketplace.json`, which carry the description and keyword list separately
+
 ## [0.3.0] — 2026-07-25
 
 ### Added
