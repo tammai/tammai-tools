@@ -188,6 +188,44 @@ You will:
 3. Replace only the contents of `<div id="deck">` with the user's slides
 4. Save the resulting file to the outputs folder as `[kebab-case-title]-slides.html`
 
+### Use `assets/build.py` — do not hand-assemble the file
+
+Writing the whole deck out by hand makes rule 1 aspirational, and it **measurably fails**. A deck generated this way from an unmodified template had silently dropped all 18 `--dg-*` diagram tokens and the `.diagram` sizing rule: diagrams pasted from `soft-visuals` render with no fill and portrait diagrams overflow the slide, with no error to explain either.
+
+So write **only the slides** to a fragment file, and let the script carry the other ~65 KB across as bytes:
+
+```bash
+python3 assets/build.py assets/template.html slides-fragment.html out/my-deck.html
+```
+
+`slides-fragment.html` holds just the `<section class="slide">` elements — no `<head>`, no `#deck` wrapper. Standard library only, so there is nothing to install.
+
+For a non-BigIn preset, pass it in rather than editing the head yourself. The script substitutes the individual `--brand-*` declarations, the Google Fonts `href`, and the watermark block, leaving their explanatory comments intact:
+
+```bash
+python3 assets/build.py assets/template.html slides-fragment.html out/my-deck.html \
+  --preset ~/.workshop-slides-preset.json --title "My Deck Title"
+```
+
+`"watermark": ""` in the preset removes the whole `#watermark` block, as specified above.
+
+The script refuses to write on a structural error (no `active` slide, or more than one) and warns without blocking on: numbering that does not match slide position, hardcoded hex colors (which break light mode), a `<button>` in slide content (which `slides-to-pdf` cannot strip), and a `.code-block` with no `.code-line` children (which collapses the snippet into one line). It also verifies the carried-over head still contains the `--dg-*` tokens, `.diagram`, `@media print`, `scaleDeck`, `--deck-scale`, `ResizeObserver`, the three toggles, and the favicon.
+
+**If you cannot run the script** (no shell access to this directory), assemble by hand — then verify the output before handing it over, because this is exactly where decks break:
+
+```bash
+# 18 token *definitions* — anchored, so `var(--dg-…)` usages don't inflate the count
+grep -c -- '^[[:space:]]*--dg-' out/my-deck.html
+
+# each of these must print "ok"
+for p in '.diagram {' '@media print' 'scaleDeck' '--deck-scale' 'ResizeObserver' \
+         'id="navigator"' 'id="themeToggle"' 'id="fullscreenToggle"' 'base64,'; do
+  grep -q -- "$p" out/my-deck.html && echo "ok   $p" || echo "MISS $p"
+done
+```
+
+Anything other than `18`, or any `MISS`, means the head was not carried across intact — re-copy it from the template rather than shipping the deck. These are presence checks on purpose: exact occurrence counts change whenever the template gains a line mentioning one of these, so they would rot into false alarms.
+
 ## Step 3 — Build slides
 
 Patterns below are the quick reference; `demo.html` shows each one in a finished slide.

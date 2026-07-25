@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.4] — 2026-07-25
+
+### Added
+- **`workshop-slides/assets/build.py`** — assembles a deck from the template plus a slide fragment, so SKILL.md's "keep the `<head>` unchanged" rule is enforced by construction instead of by instruction. Motivated by measured drift, not theory: a deck generated on 2026-07-24 from an unmodified template had silently dropped all 18 `--dg-*` diagram tokens and the `.diagram` sizing rule while keeping the favicon, print block and script — so `soft-visuals` SVGs pasted into it would render with no fill and portrait diagrams would overflow the slide, with no error in either case. Standard library only, nothing to install. Verified: head and tail bytes identical to the template, 117 CSS rule pairs and 499 declarations preserved
+- `build.py` also applies presets mechanically — substituting the individual `--brand-*` declarations, the Google Fonts `href` and the watermark block (or removing it for `"watermark": ""`), which were previously hand edits to the head, the exact place drift happens. It refuses to write when no slide carries `active` or more than one does, and warns without blocking on numbering that doesn't match slide position, hardcoded hex colors, a `<button>` in slide content, and a `.code-block` with no `.code-line` children
+- **Browser-discovery fallback for `slides-to-pdf`** — `playwright install chromium` pulls from `playwright.azureedge.net`, and when that's blocked the failure reads as a stalled download. `find_browser()` now resolves `--browser-path`, `$SLIDES_TO_PDF_BROWSER`, `$PLAYWRIGHT_CHROMIUM_PATH`, `~/.cache/puppeteer` (populated by `npx puppeteer browsers install chrome-headless-shell`, which reaches googlechromelabs) and the usual Chrome/Chromium/Edge paths, passing the result as Playwright's `executable_path`. Verified end to end: resolves the macOS `.app`-nested `Chromium 111.0.5555.0` from this machine's Puppeteer cache
+- Anti-drift verification snippet in `workshop-slides/SKILL.md` for when the script can't be run — presence checks rather than occurrence counts, since counts rot into false alarms as the template grows. Validated against both a fresh build (18 tokens, all present) and the real drifted deck (0 tokens, `.diagram` missing)
+
+### Fixed
+- **Corrected a false claim that appeared in two places: "the deck has no `@media print` rules".** The `workshop-slides` template has had an `@media print` block since v0.3.0 — `@page { size: 1280px 720px }`, `#deck` static, `.slide` back in the flow with `break-after: page`. The wrong statement sat in `CLAUDE.md:76`, where it also contradicted `CLAUDE.md:60` in the same file, and in `slides-to-pdf/SKILL.md:125`. Both now state the real reason `emulateMedia('screen')` is required: the print block is written for a paginated Cmd-P export and directly contradicts the script's per-slide `inset: 0` isolation. The old note's secondary claim — that print media would discard the dark theme — was also wrong; the print block sets `background: var(--brand-bg)`
+- `find_browser()`'s Puppeteer-cache probe filters to executable files. An intermediate directory in that cache is also named `chrome`, so a plain glob returned a directory, which Playwright would reject at exec with an error that never names the cause
+
 ## [0.3.3] — 2026-07-25
 
 ### Changed

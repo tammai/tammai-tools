@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import os
 import sys
 from pathlib import Path
 
@@ -35,8 +36,13 @@ if MISSING:
     sys.exit(
         "Missing dependencies: {}\n\n"
         "  python3 -m pip install {}\n"
-        "  python3 -m playwright install chromium".format(
-            ", ".join(MISSING), " ".join(MISSING)
+        "  python3 -m playwright install chromium\n\n"
+        "If the browser download is blocked, install one from a different host\n"
+        "and point this script at it — no Playwright browser needed:\n\n"
+        "  npx puppeteer browsers install chrome-headless-shell\n"
+        "  {} deck.html --browser-path <path>\n\n"
+        "An existing Chrome/Chromium/Edge install is found automatically.".format(
+            ", ".join(MISSING), " ".join(MISSING), Path(sys.argv[0]).name
         )
     )
 
@@ -115,6 +121,69 @@ SELECT_SLIDE_JS = """(index) => {
 }"""
 
 
+# Playwright's own browser download (`playwright install chromium`) comes off
+# playwright.azureedge.net, which some networks block outright. Any
+# Chromium-family binary already on the machine works instead — Playwright takes
+# it via `executable_path`. Checked in order; first hit wins.
+BROWSER_ENV_VARS = ("SLIDES_TO_PDF_BROWSER", "PLAYWRIGHT_CHROMIUM_PATH")
+
+BROWSER_FALLBACK_PATHS = (
+    # Puppeteer's cache — `npx puppeteer browsers install chrome-headless-shell`
+    # reaches a different host (googlechromelabs) than Playwright's CDN.
+    "~/.cache/puppeteer",
+    # Ordinary desktop installs.
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+)
+
+
+def find_browser(explicit: str | None) -> str | None:
+    """Resolve a Chromium binary, or None to let Playwright use its own."""
+    if explicit:
+        p = Path(explicit).expanduser()
+        if not p.exists():
+            sys.exit("browser not found at --browser-path {}".format(p))
+        return str(p)
+
+    for var in BROWSER_ENV_VARS:
+        val = os.environ.get(var)
+        if val:
+            p = Path(val).expanduser()
+            if p.exists():
+                return str(p)
+            print(
+                "warning: {}={} does not exist — ignoring".format(var, val),
+                file=sys.stderr,
+            )
+
+    for entry in BROWSER_FALLBACK_PATHS:
+        p = Path(entry).expanduser()
+        if p.is_file():
+            return str(p)
+        if p.is_dir():
+            # Puppeteer nests the binary under a versioned directory, and on
+            # macOS inside an .app bundle:
+            #   ~/.cache/puppeteer/chrome/mac-1095492/chrome-mac/
+            #       Chromium.app/Contents/MacOS/Chromium
+            # An intermediate *directory* is also named `chrome`, so match
+            # executable files only — handing Playwright a directory fails at
+            # exec, with an error that does not name the real cause.
+            for name in ("chrome-headless-shell", "Chromium", "chrome", "chromium"):
+                hits = [
+                    h
+                    for h in sorted(p.glob("**/" + name))
+                    if h.is_file() and os.access(h, os.X_OK)
+                ]
+                if hits:
+                    # Lexicographically last ≈ highest version directory.
+                    return str(hits[-1])
+    return None
+
+
 def render_slides(
     html: Path,
     width: int,
@@ -123,6 +192,7 @@ def render_slides(
     keep_ui: bool,
     theme: str,
     timeout_ms: int,
+    browser_path: str | None = None,
 ) -> list[tuple[bytes, str]]:
     """Return one (single-page PDF bytes, slide title) tuple per slide."""
     css = PRINT_CSS.replace("WIDTH", str(width)).replace("HEIGHT", str(height))
@@ -132,7 +202,13 @@ def render_slides(
     out: list[tuple[bytes, str]] = []
 
     with sync_playwright() as pw:
+        launch_kwargs = {}
+        if browser_path:
+            launch_kwargs["executable_path"] = browser_path
+            print("using browser at {}".format(browser_path), file=sys.stderr)
+
         browser = pw.chromium.launch(
+            **launch_kwargs,
             args=[
                 # Deterministic glyph rasterization and no color-profile shift,
                 # so the PDF matches the on-screen deck.
@@ -278,6 +354,13 @@ def main() -> None:
     ap.add_argument(
         "--timeout", type=int, default=30000, help="per-step timeout in ms"
     )
+    ap.add_argument(
+        "--browser-path",
+        help="Chromium-family binary to drive, for when `playwright install "
+        "chromium` is blocked. Also read from $SLIDES_TO_PDF_BROWSER or "
+        "$PLAYWRIGHT_CHROMIUM_PATH; otherwise a Puppeteer cache and the usual "
+        "Chrome/Chromium/Edge install paths are probed.",
+    )
     args = ap.parse_args()
 
     if not args.html.is_file():
@@ -295,6 +378,7 @@ def main() -> None:
         args.keep_ui,
         args.theme,
         args.timeout,
+        find_browser(args.browser_path),
     )
     merge(slides, out_path)
 

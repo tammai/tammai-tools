@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A **Claude Cowork plugin** (`tammai-tools`) by Tam Mai — a collection of skills (slash commands) for workshop and presentation tooling, built on the BigIn design system. The plugin is distributed as a `.plugin` file (git-ignored) bundled from this directory.
 
-There is no build system, package manager, or test suite. All assets are plain files consumed directly by Claude Code at runtime.
+There is no build system, package manager, or test suite. Assets are plain files consumed directly by Claude Code at runtime, with two executable exceptions: `slides-to-pdf/assets/slides_to_pdf.py` (needs `playwright` + `pypdf`) and `workshop-slides/assets/build.py` (standard library only).
 
 ## Structure
 
@@ -17,6 +17,8 @@ skills/
   workshop-slides/
     SKILL.md                   — the skill's instruction document (Claude reads this at invocation)
     assets/template.html       — the base HTML template for generated slide decks
+    assets/build.py            — assembler: template + slide fragment → deck
+                                 (stdlib only; makes the "head unchanged" rule mechanical)
   slides-to-pdf/
     SKILL.md                   — the skill's instruction document
     assets/slides_to_pdf.py    — Playwright + pypdf converter (deck → single PDF)
@@ -38,6 +40,19 @@ The skill generates self-contained HTML slide decks. Key design constraints:
 - **Template is read at generation time** — the skill reads `assets/template.html`, replaces only the `<div id="deck">` contents, and saves the result. The `<head>`, `#bg`, `#watermark`, `#navigator`, and `<script>` blocks are preserved byte-for-byte.
 - **Branding via CSS variables** — the `BRAND CONFIGURATION` `:root` block in the template controls accent color, background, and fonts. Custom presets are saved to `~/.workshop-slides-preset.json` and injected at generation time.
 - **BigIn defaults**: dark slate (`#020617`) + orange accent (`#f97316`), **Google Sans for headings *and* body**, **JetBrains Mono for code only** (`--brand-font-code` is referenced by just `.code-block` and inline `code`). Google Sans is requested as a variable font over `wght 400..700` because the deck uses 400/500/600/700 — a fixed `wght@400;500;700` list leaves 600 to be synthesised.
+
+### Generation goes through `assets/build.py`, not hand-assembly
+
+SKILL.md tells the agent to keep the `<head>`, chrome and `<script>` unchanged and replace only the contents of `<div id="deck">`. When the agent writes the whole file out itself, that guarantee is aspirational and **it fails in practice**: a deck generated on 2026-07-24 from an unmodified template had dropped all 18 `--dg-*` tokens and the `.diagram` rule while keeping everything else, so pasted `soft-visuals` SVGs would render with no fill and portrait diagrams would overflow — with no error either way.
+
+`build.py` takes a slide fragment and splices it between the template's real bytes, so the carry-over is structural rather than retyped. It also applies presets by substituting the individual `--brand-*` declarations, the fonts `href` and the watermark block — the three head edits SKILL.md used to ask for by hand.
+
+Two things about it that look like bugs but are not:
+
+- **`set_var` replaces only the first match.** `--brand-bg` is declared twice; the second is the `:root[data-theme="light"]` override, which must stay light or light mode renders a dark page.
+- **The Puppeteer-cache probe filters to executable files.** An intermediate *directory* is also named `chrome`, and handing Playwright a directory fails at exec with an error that never names the cause. (That resolver lives in `slides_to_pdf.py`, not here — same class of trap.)
+
+Blocking errors are only "no `active` slide" and "more than one"; everything else warns, because a check that cries wolf on the reference deck is worse than no check. Two of its checks were written wrong first and caught by running them against `demo.html`: the cover legitimately puts kicker text in `.slide-num`, and a `.code-block`'s first child is `.code-lang`, not `.code-line`.
 
 ### Slide HTML rules
 
@@ -73,7 +88,7 @@ The constraint that shapes the whole design: the deck stacks every `.slide` at `
 
 Three non-obvious details that will silently break the output if changed:
 
-- **`emulateMedia(media='screen')` is required.** `page.pdf()` emulates `print` media by default, and the deck has no `@media print` rules — the dark theme would be discarded.
+- **`emulateMedia(media='screen')` is required.** `page.pdf()` emulates `print` media by default, and the deck *does* have an `@media print` block (see the template runtime notes above) — one written for a paginated Cmd-P export: `#deck` goes `position: static; height: auto` and every `.slide` returns to the flow at `position: relative` with `break-after: page`. That directly contradicts the per-slide isolation the script injects, which absolutely-positions one `.pdf-print-target` at `inset: 0`. Emulating `screen` keeps the two export paths independent rather than layering them. (An earlier version of this note claimed the deck had no print rules and that print media would discard the dark theme — both wrong; the print block sets `background: var(--brand-bg)`.)
 - **`printBackground=True` plus `print-color-adjust: exact`** are both needed to keep the dark background, radial gradients, callout tints, and code-block fills.
 - **Overrides are injected at runtime** with `add_style_tag`; the source deck is never modified and stays usable as an interactive presentation.
 
@@ -82,6 +97,8 @@ Three non-obvious details that will silently break the output if changed:
 Decks with a dark/light toggle key off `[data-theme]` on `<html>`, seeded from `localStorage`, so a fresh headless profile gets the deck's own default (dark). `--theme dark|light` overrides it after load; `as-is` (the default) leaves it alone.
 
 Defaults: 1280 × 720 px pages (→ 960 × 540 pt, true 16:9), `deviceScaleFactor: 2`, navigator hidden.
+
+**Browser discovery has a fallback chain.** `playwright install chromium` pulls from `playwright.azureedge.net`, which some networks block — and the PyPI packages are unaffected, so only the binary needs another source. `find_browser()` resolves, in order: `--browser-path`, `$SLIDES_TO_PDF_BROWSER`, `$PLAYWRIGHT_CHROMIUM_PATH`, `~/.cache/puppeteer` (`npx puppeteer browsers install chrome-headless-shell` reaches googlechromelabs instead), then the usual Chrome/Chromium/Edge install paths. Verified end to end on this machine: it resolves the macOS `.app`-nested `Chromium 111.0.5555.0` out of the Puppeteer cache.
 
 **`--device-scale` provably does nothing to the PDF** — don't "fix" it or build features on it. Print-to-PDF output is resolution-independent already: text is emitted as Type3 fonts (vector glyph procedures, still selectable and searchable), gradients and borders are vector, and raster images pass through at native resolution. Measured, not assumed: the same deck at `--device-scale 1`, `2`, and `3` yields byte-identical 460 KB files; a 240×160 PNG watermark embeds at 240×160 at every setting; `<img srcset="… 1x, … 2x">` picks the 2× variant even at DPR 1. The flag is retained only because it sets the browser DPR for decks whose JS branches on `devicePixelRatio`.
 

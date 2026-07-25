@@ -72,6 +72,31 @@ python3 -m venv ~/.slides-to-pdf-venv && ~/.slides-to-pdf-venv/bin/pip install p
 
 Then invoke the script with `~/.slides-to-pdf-venv/bin/python` instead of `python3`.
 
+### If the browser download is blocked
+
+`playwright install chromium` pulls from `playwright.azureedge.net`. Some networks block it, and the failure looks like a stalled download rather than a refusal. **The Python packages are still needed** (`playwright` and `pypdf` come from PyPI, a different host) — it's only the browser binary that has to come from somewhere else. Any Chromium-family binary works; Playwright drives it via `executable_path`.
+
+The script probes for one automatically, in this order:
+
+1. `--browser-path <path>`
+2. `$SLIDES_TO_PDF_BROWSER`, then `$PLAYWRIGHT_CHROMIUM_PATH` (a non-existent path warns and falls through)
+3. `~/.cache/puppeteer` — including the macOS `.app` bundle nesting
+4. The usual Chrome / Chromium / Edge install paths on macOS and Linux
+
+So in most cases an existing browser is found with no flag at all. To install one from a different host:
+
+```bash
+npx puppeteer browsers install chrome-headless-shell
+```
+
+That downloads from `googlechromelabs`, not Playwright's CDN. Then either let the probe find it, or be explicit:
+
+```bash
+python3 assets/slides_to_pdf.py deck.html --browser-path "$(ls -d ~/.cache/puppeteer/chrome-headless-shell/*/*/chrome-headless-shell | tail -1)"
+```
+
+The script prints `using browser at <path>` when it drives an external binary, so the log says which one was used.
+
 ## Step 3 — Convert
 
 Run `assets/slides_to_pdf.py` (in the same directory as this SKILL.md):
@@ -122,4 +147,4 @@ Expect `960.0 x 540.0` pt for the default 1280×720. Then report the real number
 
 - **Don't use `chromium --headless --print-to-pdf` directly.** It renders the deck's single `.active` slide and produces a one-page PDF. The per-slide DOM manipulation is the whole point of driving Playwright.
 - **Don't edit the deck's HTML to make slides visible.** All overrides are injected at runtime via `add_style_tag`; the source deck stays untouched and still works as an interactive presentation.
-- **Don't leave `emulateMedia` at its default.** `page.pdf()` emulates `print` media unless told otherwise, and the deck has no `@media print` rules.
+- **Don't leave `emulateMedia` at its default.** `page.pdf()` emulates `print` media unless told otherwise, and the deck **does** carry an `@media print` block — written for a hand-driven Cmd-P export, where `#deck` becomes `position: static; height: auto` and each `.slide` rejoins the flow at `position: relative` with `break-after: page`. Those rules fight the per-slide isolation this script injects (one `.pdf-print-target`, absolutely positioned at `inset: 0`). Emulating `screen` keeps the two paths independent.
