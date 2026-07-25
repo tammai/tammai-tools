@@ -54,9 +54,10 @@ def fail(msg: str) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def apply_preset(html: str, preset: dict) -> tuple[str, list[str]]:
-    """Return (html, notes). Only keys present in the preset are applied."""
+def apply_preset(html: str, preset: dict) -> tuple[str, list[str], list[str]]:
+    """Return (html, notes, warnings). Only keys present in the preset apply."""
     notes: list[str] = []
+    warnings: list[str] = []
 
     def set_var(text: str, name: str, value: str) -> str:
         """Replace the value of the first `--name: ...;` declaration.
@@ -111,6 +112,27 @@ def apply_preset(html: str, preset: dict) -> tuple[str, list[str]]:
             fail('could not find the <div id="watermark"> block in the template')
         mark = preset["watermark"].strip()
         if mark:
+            # A watermark that points off-machine breaks the deck's core promise
+            # of being self-contained: offline, or once the URL rots, it renders
+            # as a broken-image box — silently, in the deck *and* in an exported
+            # PDF. Measured with a logo at a non-existent https URL. SKILL.md
+            # does offer "Remote URL" as an option, so this warns, not errors.
+            ref = re.search(r'(?:src|href)\s*=\s*["\']([^"\']+)["\']', mark)
+            if ref:
+                url = ref.group(1)
+                if url.startswith(("http://", "https://")):
+                    warnings.append(
+                        "watermark points at a remote URL ({}) — the deck stops "
+                        "being self-contained and renders a broken-image box "
+                        "offline or if the URL breaks. Prefer inline <svg> or a "
+                        "data: URI".format(url[:60])
+                    )
+                elif not url.startswith("data:"):
+                    warnings.append(
+                        "watermark references a local path ({}) — it must travel "
+                        "with the .html file or the logo will not render. Prefer "
+                        "inline <svg> or a data: URI".format(url[:60])
+                    )
             html = block.sub(
                 '<div id="watermark" aria-hidden="true">\n  '
                 + mark
@@ -123,7 +145,7 @@ def apply_preset(html: str, preset: dict) -> tuple[str, list[str]]:
             html = block.sub("", html, count=1)
             notes.append("watermark removed")
 
-    return html, notes
+    return html, notes, warnings
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -295,7 +317,8 @@ def main() -> int:
             preset = json.loads(args.preset.read_text(encoding="utf-8"))
         except json.JSONDecodeError as e:
             fail("preset is not valid JSON: {}".format(e))
-        output, notes = apply_preset(output, preset)
+        output, notes, preset_warnings = apply_preset(output, preset)
+        warnings += preset_warnings
 
     if args.title:
         output, n = re.subn(

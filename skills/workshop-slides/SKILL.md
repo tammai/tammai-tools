@@ -209,7 +209,7 @@ python3 assets/build.py assets/template.html slides-fragment.html out/my-deck.ht
 
 `"watermark": ""` in the preset removes the whole `#watermark` block, as specified above.
 
-The script refuses to write on a structural error (no `active` slide, or more than one) and warns without blocking on: numbering that does not match slide position, hardcoded hex colors (which break light mode), a `<button>` in slide content (which `slides-to-pdf` cannot strip), and a `.code-block` with no `.code-line` children (which collapses the snippet into one line). It also verifies the carried-over head still contains the `--dg-*` tokens, `.diagram`, `@media print`, `scaleDeck`, `--deck-scale`, `ResizeObserver`, the three toggles, and the favicon.
+The script refuses to write on a structural error (no `active` slide, or more than one) and warns without blocking on: numbering that does not match slide position, hardcoded hex colors (which break light mode), a `<button>` in slide content (which `slides-to-pdf` cannot strip), a `.code-block` with no `.code-line` children (which collapses the snippet into one line), and a preset watermark pointing at a remote URL or a local file path (either one renders as a broken-image box once the deck travels, offline or after the URL rots — prefer inline `<svg>` or a `data:` URI). It also verifies the carried-over head still contains the `--dg-*` tokens, `.diagram`, `@media print`, `scaleDeck`, `--deck-scale`, `ResizeObserver`, the three toggles, and the favicon.
 
 **If you cannot run the script** (no shell access to this directory), assemble by hand — then verify the output before handing it over, because this is exactly where decks break:
 

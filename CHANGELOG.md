@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.5] — 2026-07-25
+
+### Added
+- **`slides-to-pdf` now reports column overlap, a failure its clipping check structurally cannot see.** `.col` is `overflow: visible`, so a child wider than its column paints over its neighbour without changing the slide's `scrollWidth` — the existing measurement is taken on the slide, so it returns 0 and stays silent. Measured case: an `<svg width="700" height="660">` in a 568px column reaches **132px into the next column**, with `elementFromPoint` at that edge returning the neighbouring `<p>`. Reported per slide as `← OVERLAP (svg 132px past its column)` plus a summary naming the likely fix. Absolutely-positioned and hidden children are skipped, with 2px of slack for subpixel rounding; verified silent across all 15 slides of the reference deck and firing on exactly the one bad variant of four
+- **`build.py` warns when a preset watermark points off-machine** — a remote URL renders as a broken-image box offline or once the URL rots, and a local path breaks as soon as the `.html` travels without it; both defeat the deck's self-contained promise. Found by hitting it: a test preset pointing at a non-existent `https://example.com/logo.svg` produced a broken-image box in the deck *and* the exported PDF, silently. Warns rather than errors, since `SKILL.md` does offer "Remote URL" as an option. Verified across five cases — remote URL and local path warn; `data:` URI, inline `<svg>` and watermark removal stay silent
+
+### Fixed
+- **Corrected the documented purpose of `class="diagram"`.** It was described as what stops portrait diagrams overflowing a slide. Measured against four variants, that is only true for an `<svg>` carrying explicit `width`/`height` attributes: there the class pulls a 700px SVG back to 536px and prevents a 132px overlap. For a `viewBox`-only SVG the column's flex layout already caps it and the class changes nothing measurable (536 × 435 either way). `CLAUDE.md` and `soft-visuals/SKILL.md` now say which case it is load-bearing for, so the rule does not read as redundant and get "simplified" away
+
 ## [0.3.4] — 2026-07-25
 
 ### Added

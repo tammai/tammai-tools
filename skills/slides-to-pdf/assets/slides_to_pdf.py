@@ -100,7 +100,7 @@ SELECT_SLIDE_JS = """(index) => {
   });
 
   const el = slides[index];
-  if (!el) return { title: '', overflowY: 0, overflowX: 0 };
+  if (!el) return { title: '', overflowY: 0, overflowX: 0, overlap: null };
 
   // Two separate lookups, not one selector list: on section dividers the
   // .section-label sits *before* the .slide-title, and querySelector returns
@@ -110,11 +110,41 @@ SELECT_SLIDE_JS = """(index) => {
   // would splice into "Beautiful DecksInstantly".
   const title = t ? (t.innerText || t.textContent).trim().replace(/\\s+/g, ' ') : '';
 
+  // A child wider than its column is NOT caught above: `.col` is
+  // `overflow: visible`, so an oversized child paints over its neighbour
+  // instead of growing the slide's scroll box. Measured case: an <svg> carrying
+  // width="700" height="660" in a 568px column reaches 132px into the next
+  // column — slide scrollWidth unchanged, nothing cropped, slide visually
+  // broken. `class="diagram"` is what prevents it; this catches the omission.
+  let overlap = null;
+  for (const col of el.querySelectorAll('.col')) {
+    const cb = col.getBoundingClientRect();
+    if (cb.width === 0) continue;
+    for (const child of col.children) {
+      const cs = getComputedStyle(child);
+      // Absolutely-positioned decoration is placed deliberately; a hidden child
+      // has no visible geometry to collide with anything.
+      if (cs.position === 'absolute' || cs.position === 'fixed') continue;
+      if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+      const rb = child.getBoundingClientRect();
+      // 2px of slack: subpixel layout rounding is not an overlap.
+      const past = Math.max(rb.right - cb.right, cb.left - rb.left);
+      if (past > 2 && (!overlap || past > overlap.px)) {
+        const cls = (child.getAttribute('class') || '').trim().split(/\\s+/)[0];
+        overlap = {
+          px: Math.round(past),
+          el: child.tagName.toLowerCase() + (cls ? '.' + cls : ''),
+        };
+      }
+    }
+  }
+
   // The slide is pinned to the page box inside an overflow:hidden body, so
   // content that does not fit is silently cropped rather than pushed onto a
   // second PDF page. Measure it instead of trusting the page count.
   return {
     title,
+    overlap,
     overflowY: Math.max(0, el.scrollHeight - el.clientHeight),
     overflowX: Math.max(0, el.scrollWidth - el.clientWidth),
   };
@@ -254,6 +284,7 @@ def render_slides(
             sys.exit(f"no .slide elements found in {html} — is this a slide deck?")
 
         clipped: list[str] = []
+        overlapping: list[str] = []
 
         for i in range(total):
             info = page.evaluate(SELECT_SLIDE_JS, i)
@@ -281,6 +312,17 @@ def render_slides(
                 )
                 note = f"  ← CLIPPED ({dims})"
                 clipped.append(f"slide {i + 1} ({title or 'untitled'}): {dims}")
+
+            # Distinct from clipping: nothing is cropped, the element just
+            # collides with whatever sits in the next column.
+            ov = info.get("overlap")
+            if ov:
+                note += f"  ← OVERLAP ({ov['el']} {ov['px']}px past its column)"
+                overlapping.append(
+                    "slide {} ({}): {} reaches {}px past its column".format(
+                        i + 1, title or "untitled", ov["el"], ov["px"]
+                    )
+                )
             print(
                 f"  [{i + 1}/{total}] {title or '(untitled)'}{note}", file=sys.stderr
             )
@@ -296,6 +338,20 @@ def render_slides(
             print(f"  - {line}", file=sys.stderr)
         print(
             "  Trim or split these slides in the HTML deck, then re-run.",
+            file=sys.stderr,
+        )
+
+    if overlapping:
+        print(
+            "\nwarning: content overlaps the next column — not cropped, but it "
+            "paints over its neighbour:",
+            file=sys.stderr,
+        )
+        for line in overlapping:
+            print(f"  - {line}", file=sys.stderr)
+        print(
+            '  Usually an <svg> with width/height attributes and no class="diagram";'
+            "\n  adding that class constrains it to the column.",
             file=sys.stderr,
         )
 

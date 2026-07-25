@@ -254,8 +254,15 @@ The `--dg-*` tokens are defined **identically** here and in
 </div>
 ```
 
-Add `class="diagram"` for the deck's sizing. If you add a **new** token here, add it there
-too — a token the deck doesn't define renders as no fill, silently.
+Add `class="diagram"` for the deck's sizing. It matters most when the `<svg>` carries
+`width`/`height` attributes rather than a bare `viewBox`: measured, a `width="700"` SVG in a
+568px column reaches **132px into the next column** and paints over it — not cropped, so
+nothing complains. With the class it is constrained to 536px and fits. (`slides-to-pdf`
+now reports this as an `OVERLAP` warning.) A `viewBox`-only `<svg>` is already capped by the
+column's flex layout, so the class is harmless but not load-bearing there.
+
+If you add a **new** token here, add it there too — a token the deck doesn't define renders
+as no fill, silently.
 
 ## Hard rules
 

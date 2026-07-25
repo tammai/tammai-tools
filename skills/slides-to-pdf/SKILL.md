@@ -137,6 +137,8 @@ Expect `960.0 x 540.0` pt for the default 1280×720. Then report the real number
 
 **`← CLIPPED (Npx too tall)` in the output** — that slide has more content than fits in 720 px. Because slides are pinned to the page box inside an `overflow: hidden` body, the excess is **silently cropped** rather than flowing onto a second page; the PDF still has one page per slide and looks structurally fine while the bottom of that slide is simply gone. The script measures each slide and reports this, so never dismiss it as cosmetic. Fix the *deck*, not the export: trim the slide or split it in two, then re-run. Always relay these warnings to the user.
 
+**`← OVERLAP (svg 132px past its column)` in the output** — a *different* failure from clipping, and the reason the two are reported separately. Nothing is cropped here: `.col` is `overflow: visible`, so an oversized child paints over whatever sits in the next column while the slide's own `scrollWidth` stays unchanged — the slide-level measurement above cannot see it. The usual cause is an `<svg>` with `width`/`height` attributes and no `class="diagram"`; adding that class constrains it to the column. Relay this too: the PDF looks structurally fine while two columns are drawn on top of each other.
+
 **Fonts look wrong / fell back to a system sans** — the deck loads Google Fonts from a CDN, so conversion needs network access. The script warns on `stderr` and continues rather than failing. Re-run when online, or accept the fallback.
 
 **Backgrounds print white** — something dropped `printBackground` or the `print-color-adjust: exact` override. Both are set by the script; don't reimplement the export with a bare `chromium --print-to-pdf` CLI call, which cannot isolate slides and loses the per-slide loop entirely.
