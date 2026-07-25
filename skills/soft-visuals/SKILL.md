@@ -133,7 +133,7 @@ work in both themes and match the deck.
 <path d="M115 62 V84" fill="none" stroke="var(--dg-line)" stroke-width="1.75"
       stroke-linecap="round" marker-end="url(#aFlow)"/>
 
-<!-- rounded elbow: run, Q corner, turn, Q corner, run (corner radius 12) -->
+<!-- rounded elbow: run, Q corner, turn, Q corner, run (corner radius 12–16) -->
 <path d="M230 176 V194 Q230 206 218 206 H79 Q67 206 67 218 V240" fill="none"
       stroke="var(--dg-line)" stroke-width="1.75" stroke-linecap="round"
       stroke-linejoin="round" marker-end="url(#aFlow)"/>
@@ -216,7 +216,7 @@ Per type:
 
 ## Step 4 — Save and verify
 
-Save to the outputs folder as `[kebab-case-title]-visual.html`.
+Save as `[kebab-case-title]-visual.html` — where the user asked, or the working directory if they didn't say.
 
 Then check the two things that silently break a visual:
 
@@ -228,7 +228,7 @@ Then check the two things that silently break a visual:
    `id="aFlow"`; duplicate ids are invalid and both references resolve to the first.
    Suffix them (`aFlow`, `aArch`, `aSeqRet`).
 
-Rule 1 is now also enforced downstream, which is the only reason it stops mattering how diligent you were: `workshop-slides/assets/build.py` warns when a shape's attributes prove an overflow, and `slides-to-pdf` measures every `<svg>` with `getBBox()` at export and reports `SVG OUTSIDE VIEWBOX`. Both were added after a deck shipped with a card cut off — a documented manual check catches nothing if nobody runs it. Getting the coordinates right here is still the cheap fix; those two are the backstop.
+Rule 1 has one backstop, and only when the `<svg>` ends up in a deck: `workshop-slides/assets/build.py` warns at assembly time when a shape's attributes prove an overflow. It was added after a deck shipped with a card cut off — a documented manual check catches nothing if nobody runs it. That check is deliberately partial (it skips transforms, curves and text width), and **nothing measures a visual saved on its own**, so getting the coordinates right here is the fix, not the fallback.
 
 Paste this in DevTools to check both at once:
 
@@ -259,9 +259,10 @@ The `--dg-*` tokens are defined **identically** here and in
 Add `class="diagram"` for the deck's sizing. It matters most when the `<svg>` carries
 `width`/`height` attributes rather than a bare `viewBox`: measured, a `width="700"` SVG in a
 568px column reaches **132px into the next column** and paints over it — not cropped, so
-nothing complains. With the class it is constrained to 536px and fits. (`slides-to-pdf`
-now reports this as an `OVERLAP` warning.) A `viewBox`-only `<svg>` is already capped by the
-column's flex layout, so the class is harmless but not load-bearing there.
+nothing complains at render time. With the class it is constrained to 536px and fits.
+(`build.py` warns when it sees an attribute-sized `<svg>` without the class.) A
+`viewBox`-only `<svg>` is already capped by the column's flex layout, so the class is
+harmless but not load-bearing there.
 
 If you add a **new** token here, add it there too — a token the deck doesn't define renders
 as no fill, silently.

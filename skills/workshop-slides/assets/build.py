@@ -330,6 +330,28 @@ def _svg_extent(body: str) -> tuple[float, float, str] | None:
     return right, bottom, who
 
 
+# Slide is 1280px wide with 72px padding each side, so a `.slide-body` is 1136px.
+# `.col` splits that evenly and adds 32px of inner padding — dropped on the outer
+# side of the first and last column, so a lone column keeps the full width.
+SLIDE_BODY_WIDTH = 1280 - 72 * 2
+COL_GUTTER = 32
+
+
+def _column_width(text: str, pos: int) -> float:
+    """Inner width of the column containing `pos`, from the nearest `.slide-body` above it."""
+    body = None
+    for m in re.finditer(r'<div[^>]*class\s*=\s*["\']([^"\']*\bslide-body\b[^"\']*)["\']', text):
+        if m.start() > pos:
+            break
+        body = m.group(1)
+    if body is None:
+        return float(SLIDE_BODY_WIDTH)
+    cols = 2 if "cols-2" in body else 3 if "cols-3" in body else 1
+    if cols == 1:
+        return float(SLIDE_BODY_WIDTH)
+    return SLIDE_BODY_WIDTH / cols - COL_GUTTER
+
+
 def check_svg_viewbox(slides: str) -> list[str]:
     """Warn when an <svg>'s own shapes reach past its viewBox.
 
@@ -360,6 +382,31 @@ def check_svg_viewbox(slides: str) -> list[str]:
         head = m.group(1)
         close = text.find("</svg>", m.end())
         body = text[m.end() : close if close != -1 else len(text)]
+
+        # A `width`/`height`-sized <svg> is laid out at that size, so one wider than
+        # its column paints over the neighbour instead of being cropped — `.col` is
+        # `overflow: visible`, so nothing reports it. Measured: width="700" in a
+        # 568px column reaches 132px into the next. `class="diagram"` (width: 100%;
+        # max-height: 100%) is what constrains it.
+        #
+        # The limit is the enclosing column's width, not a constant: a single column is
+        # the full 1136px and has no neighbour to paint over, so flagging a wide diagram
+        # there is a false alarm, while a cols-3 column is only ~347px and a 420px SVG
+        # already overlaps. Both were measured against this stylesheet.
+        w = re.search(r'\bwidth\s*=\s*["\'](\d+(?:\.\d+)?)(?:px)?["\']', head)
+        if (
+            w
+            and float(w.group(1)) > _column_width(text, m.start())
+            and re.search(r'\bheight\s*=\s*["\']\d', head)
+            and not re.search(r'class\s*=\s*["\'][^"\']*\bdiagram\b', head)
+        ):
+            limit = _column_width(text, m.start())
+            warnings.append(
+                'an <svg width="{}"> has no class="diagram" — its column is only {:.0f}px '
+                "wide, so it paints over the next one instead of being cropped, which "
+                "nothing else reports".format(w.group(1), limit)
+            )
+
         vb = re.search(r'viewBox\s*=\s*["\']\s*([-\d.]+)[,\s]+([-\d.]+)[,\s]+([-\d.]+)[,\s]+([-\d.]+)', head)
         if not vb:
             continue

@@ -1,6 +1,6 @@
 # tammai-tools
 
-A **Claude Cowork plugin** by Tam Mai — workshop and presentation utilities built on the BigIn design system.
+A **Claude Code plugin** by Tam Mai — workshop and presentation utilities built on the BigIn design system.
 
 ## Skills
 
@@ -43,18 +43,18 @@ Exports a generated HTML deck to a single multi-page PDF — one page per slide.
 - "Export the deck as a PDF"
 - "I need a PDF version to email the team"
 
-**Output** — one PDF, one page per slide, with a bookmark per slide title.
+**Output** — one PDF, one page per slide.
 
 | Property | Value |
 |---|---|
 | Page size | 1280 × 720 px → 960 × 540 pt → 13.333 × 7.5 in |
 | Aspect ratio | 16:9 — same as PowerPoint / Keynote widescreen |
 | Resolution | Resolution-independent — vector text (selectable & searchable), vector gradients, images at native resolution |
-| Fidelity | Backgrounds, gradients, accent colors, and Google Fonts preserved as-is |
+| Fidelity | Backgrounds, gradients, accent colors, webfonts and inline SVG preserved as-is |
 
-**Requires** `playwright` (+ Chromium) and `pypdf`. The skill checks for both and installs them if missing.
+**Requires** a local headless Chromium — `npx puppeteer browsers install chrome-headless-shell`. Nothing else: the exporter is Python standard library only.
 
-Because the deck stacks every slide at `inset: 0` and reveals only the `.active` one, a plain `chromium --print-to-pdf` produces a single-page PDF. The converter instead drives headless Chromium once per slide, then merges the results with pypdf.
+Because the deck stacks every slide at `inset: 0` and reveals only the `.active` one, a plain `chromium --print-to-pdf` produces a single-page PDF. The exporter injects a print stylesheet into a copy of the deck, which returns every slide to the flow at 1280×720 with a page break after each — so one browser run produces the whole deck, with no per-slide loop and no merge step.
 
 ### `soft-visuals`
 
@@ -90,7 +90,7 @@ Because the `--dg-*` tokens are shared verbatim with `workshop-slides`, any gene
 
 ```
 .claude-plugin/plugin.json          — plugin metadata (name, version)
-.claude-plugin/marketplace.json     — Claude Cowork marketplace config (categories, tags, pricing, icon)
+.claude-plugin/marketplace.json     — plugin marketplace metadata (owner, source, license, keywords)
 skills/
   workshop-slides/
     SKILL.md                        — skill instructions (Claude reads this at invocation)
@@ -102,7 +102,7 @@ skills/
   slides-to-pdf/
     SKILL.md                        — skill instructions
     assets/
-      slides_to_pdf.py              — Playwright + pypdf deck-to-PDF converter
+      export.py                     — deck-to-PDF exporter (stdlib; one headless-Chromium run)
   soft-visuals/
     SKILL.md                        — skill instructions
     assets/
@@ -112,11 +112,16 @@ skills/
                                       product, each captioned with its prompt
 ```
 
-Skills are discovered automatically by Claude Cowork from the `skills/` directory. Each skill folder must contain a `SKILL.md` with YAML frontmatter (`name`, `description`, `triggers`).
+Skills are discovered automatically from the `skills/` directory. Each skill folder must contain a `SKILL.md` with YAML frontmatter (`name`, `description`, `triggers`).
 
 ## Installation
 
-Open `tammai-tools.plugin` in Claude Cowork — a **Save plugin** button will appear. Click it to install.
+Add this repository as a plugin marketplace in Claude Code, then install `tammai-tools` from it:
+
+```bash
+claude plugin marketplace add tammai/tammai-tools
+claude plugin install tammai-tools
+```
 
 ## Adding a new skill
 

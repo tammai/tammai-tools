@@ -37,7 +37,9 @@ Because slides are a fixed 720 px tall and clipped (not scrollable), **content t
 Two routes — mention the second when the user wants a file to send round:
 
 1. **Cmd-P / Ctrl-P** in the browser. Zero dependencies, uses the template's `@media print` rules. Fine for a quick copy.
-2. **The `slides-to-pdf` skill** (in this same plugin). Higher fidelity, one page per slide, a PDF bookmark per slide title, `--theme light` support, and it warns when a slide's content was clipped. Prefer this when the PDF matters.
+2. **The `slides-to-pdf` skill** (in this same plugin). One command, one page per slide at 960 × 540 pt, `--theme light` support, and it injects its own print CSS rather than trusting the template's, so it also works on decks with no print block. It warns if the page count does not match the slide count. Needs a local headless Chromium; the skill says how to get one.
+
+Neither route detects a slide whose content overran the 720 px stage — the overflow is silently cropped in the browser and in the PDF alike. Keep slides sparse instead of relying on a warning.
 
 ## Step 1 — Gather content
 
@@ -151,7 +153,7 @@ After collecting, **save** to `~/.workshop-slides-preset.json`:
 
 Set `"watermark": ""` if the user chose no logo.
 
-If `$HOME` is not writable or not persisted (sandboxed hosts such as Claude Cowork), the save silently buys nothing — the next session starts with no preset. Don't quietly drop the file into the output folder instead: pass the preset to `build.py` for this deck, and tell the user the preset could not be persisted and will need re-entering, or ask them to keep the JSON somewhere they control.
+If `$HOME` is not writable, the save silently buys nothing — the next session starts with no preset. Don't quietly drop the file beside the deck instead: pass the preset to `build.py` for this deck, and tell the user it could not be persisted and will need re-entering, or ask them where to keep the JSON.
 
 ### 4. Inject branding into the template
 
@@ -188,7 +190,7 @@ You will:
 1. Keep the entire `<head>` (fonts, CSS variables, all style rules) **unchanged**
 2. Keep `#bg`, `#watermark`, `#navigator`, `#themeToggle`, `#fullscreenToggle`, and the `<script>` block **unchanged** — the toggles and the scaling/swipe logic live there
 3. Replace only the contents of `<div id="deck">` with the user's slides
-4. Save the resulting file to the outputs folder as `[kebab-case-title]-slides.html`
+4. Save the resulting file as `[kebab-case-title]-slides.html` — where the user asked, or the working directory if they didn't say
 
 ### Use `assets/build.py` — do not hand-assemble the file
 
@@ -202,7 +204,7 @@ python3 assets/build.py assets/template.html "$TMPDIR/slides-fragment.html" out/
 
 `slides-fragment.html` holds just the `<section class="slide">` elements — no `<head>`, no `#deck` wrapper. Standard library only, so there is nothing to install.
 
-**Write the fragment outside the deliverable folder**, as above — not into the working directory. The fragment is scaffolding, not output. In a sandboxed host (Claude Cowork) the working directory *is* the user-visible `outputs/` folder, so a bare relative path ships build scrap next to the deck: an observed run left `slides-fragment.html` and four `pgN.png` verification rasters sitting beside the `.html` and `.pdf`, and the sandbox could not delete them afterwards. The same applies to anything else generated along the way — page rasters, thumbnails, a preset written for this deck only. Put them in `$TMPDIR` (or any scratch path) and delete them once the deck verifies. Only the deck itself, and a PDF if one was asked for, belong in the output folder.
+**Write the fragment to a scratch path**, as above — `$TMPDIR`, not next to the deck. The fragment is scaffolding, not output, and the same goes for anything else generated on the way: page rasters, thumbnails, a preset written for this deck only. An observed run left `slides-fragment.html` and four `pgN.png` verification rasters sitting beside the deliverable. Delete scratch once the deck verifies; only the deck itself, and a PDF if one was asked for, are output.
 
 For a non-BigIn preset, pass it in rather than editing the head yourself. The script substitutes the individual `--brand-*` declarations, the Google Fonts `href`, and the watermark block, leaving their explanatory comments intact:
 
@@ -213,15 +215,13 @@ python3 assets/build.py assets/template.html slides-fragment.html out/my-deck.ht
 
 `"watermark": ""` in the preset removes the whole `#watermark` block, as specified above.
 
-### Fonts: the deck uses the CDN, the PDF embeds
+### Fonts: leave the CDN `<link>` alone
 
-Leave the Google Fonts `<link>` alone. **The deck loads its fonts from the CDN** — that keeps the `.html` small and lets viewers hit Google's cache — and `build.py` has no font-embedding mode by design.
+**The deck loads its fonts from the CDN.** That keeps the `.html` small and lets viewers hit Google's shared cache, and `build.py` has no font-embedding mode by design. `slides-to-pdf` doesn't embed either — it renders in a local browser where the CDN resolves, so whatever you see on screen is what lands in the PDF.
 
-The PDF is the case that cannot work that way: it is a snapshot of whatever rendered at export time, so a blocked or slow CDN is baked in permanently, with nothing to re-try later. `slides-to-pdf` therefore self-hosts the same families *at export time only*, injected at runtime, deck untouched. It is the default there; see that skill for details. This matters in a sandboxed host such as Claude Cowork, where `fonts.googleapis.com` is blocked outright.
+The one consequence worth knowing: on a machine that cannot reach `fonts.googleapis.com`, the deck falls back to `system-ui` on screen **and** in the PDF. Nothing is broken and the layout holds; only the typeface changes.
 
-So if a deck generated in Cowork looks like it is in the wrong font on screen, that is expected and only affects the interactive view — the exported PDF still carries the real typography.
-
-The script refuses to write on a structural error (no `active` slide, or more than one) and warns without blocking on: numbering that does not match slide position, hardcoded hex colors (which break light mode), a `<button>` in slide content (which `slides-to-pdf` cannot strip), a `.code-block` with no `.code-line` children (which collapses the snippet into one line), a preset watermark pointing at a remote URL or a local file path (either one renders as a broken-image box once the deck travels, offline or after the URL rots — prefer inline `<svg>` or a `data:` URI), and **an `<svg>` whose shapes reach past its own `viewBox`** (that edge is simply never drawn — see below). It also verifies the carried-over head still contains the `--dg-*` tokens, `.diagram`, `@media print`, `scaleDeck`, `--deck-scale`, `ResizeObserver`, the three toggles, and the favicon.
+The script refuses to write on a structural error (no `active` slide, or more than one) and warns without blocking on: numbering that does not match slide position, hardcoded hex colors (which break light mode), a `<button>` in slide content (which `slides-to-pdf` cannot strip), a `.code-block` with no `.code-line` children (which collapses the snippet into one line), a preset watermark pointing at a remote URL or a local file path (either one renders as a broken-image box once the deck travels, offline or after the URL rots — prefer inline `<svg>` or a `data:` URI), **an `<svg>` whose shapes reach past its own `viewBox`** (that edge is simply never drawn — see below), and **an `<svg>` sized by `width`/`height` attributes wider than 536px without `class="diagram"`** (at that width it overflows its column and paints over the next one rather than being cropped; narrower ones cannot, so they are not flagged). It also verifies the carried-over head still contains the `--dg-*` tokens, `.diagram`, `@media print`, `scaleDeck`, `--deck-scale`, `ResizeObserver`, the three toggles, and the favicon.
 
 ### Size the `viewBox` from the shapes, not by eye
 
@@ -399,7 +399,7 @@ Keep to **5–6 rows** and short cells; the table does not scroll and longer con
 #### Diagram — inline SVG, soft flat style
 For architecture and flow diagrams. Inline SVG keeps the deck self-contained (no image files to ship alongside it) and theme-aware. See slide 09 of `demo.html` for the full worked example.
 
-For anything bigger than one small diagram — a full flowchart, a wireframe, a mindmap — use the **`soft-visuals`** skill instead and paste its `<svg>` in here. It shares this exact token set and ships a gallery of twelve shapes and five connector styles.
+For anything bigger than one small diagram — a full flowchart, a wireframe, a mindmap — use the **`soft-visuals`** skill instead and paste its `<svg>` in here. It shares this exact token set and ships a gallery of 18 shapes, 6 connector styles, 22 wireframe components and 5 device frames.
 
 The style comes from the `--dg-*` tokens in the template:
 
@@ -502,7 +502,7 @@ Both `.tag-main` and `.tag-sub` are `white-space: nowrap` — keep them to one o
 
 - Highlight 1–2 key words per title with `<span style="color:var(--brand-accent)">` for visual punch.
 - Use section dividers to create breathing room before major topic shifts.
-- Stats slides shine with exactly 3 columns and short, punchy numbers.
+- Stats slides shine with exactly 3 columns and short, punchy numbers. `.stat-block` fills its column and centres vertically, so a row mixing stat blocks with an ordinary column (labels, tags) reads as misaligned — the stats sit mid-slide while the other column starts at the top. Either make every column a stat block, or add a `.spacer` to the odd one out.
 - Comparison slides: two columns with muted col-label left / orange right for a short before-after, or `.cmp-table` when you have 4+ criteria to line up.
 - End with a closing slide: section divider or cover variant with a call-to-action.
 - Aim for 6–12 slides total. More than 15 is usually too many for a workshop.
@@ -516,4 +516,4 @@ Both `.tag-main` and `.tag-sub` are `white-space: nowrap` — keep them to one o
 - [ ] Every code line is wrapped in its own `.code-line` (otherwise the snippet reflows into one paragraph)
 - [ ] No hardcoded colors in slide markup — only `var(--brand-accent)` / `--slate-*`
 - [ ] `<head>`, watermark, toggles, navigator, and `<script>` are byte-for-byte identical to the template
-- [ ] File is saved to the outputs folder with a descriptive kebab-case name
+- [ ] File saved with a descriptive kebab-case name, and no build scratch left beside it

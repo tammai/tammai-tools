@@ -851,6 +851,10 @@
        Only applies when printing or exporting to PDF; the on-screen
        deck (with JS-driven slide switching) is unaffected.
     ============================================================ */
+    /* Dependency-free Cmd-P export. `slides-to-pdf/assets/export.py` carries a
+       deliberate fork of this block (it injects its own, because a deck without
+       one exports as a single US Letter page) — and injects it *after* this, so
+       the two cascade. Change one, change both. */
     @media print {
       @page { size: 1280px 720px; margin: 0; }
 
