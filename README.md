@@ -33,6 +33,32 @@ Generates a complete, self-contained HTML slide deck from a topic, outline, or d
 
 **Default brand:** dark slate (`#020617`) + orange accent (`#f97316`), Google Sans for headings and body, Fira Code for code only, BigIn watermark.
 
+### `workshop-handbook`
+
+Generates a complete, self-contained HTML handbook — the long-form, read-alone companion to a `workshop-slides` deck.
+
+**Trigger phrases**
+
+- "Write a handbook for this Docker workshop"
+- "Make a participant guide for the onboarding session"
+- "I need something people can read afterwards, not just slides"
+
+**Output** — a single `.html` file: one scrolling document, a sidebar of bookmarks, no server, no dependencies.
+
+**Handbook features**
+
+| Feature | Detail |
+|---|---|
+| Bookmarks sidebar | Built at load from the headings — one flat list, no numbers, chapters and sections told apart by weight alone |
+| Scrollspy + deep links | The bookmark for the section being read highlights itself; every heading gets a `#` anchor |
+| Floating controls | Icon-only theme toggle, fixed top-right at every width; a drawer trigger, fixed top-left, appears only below 1080px — nothing lives in a header bar |
+| Content types | Prose, lists (bullet / numbered / checklist), definition lists, four callout types, pull quotes, real `<pre>` code blocks with copy buttons, tabs, three table variants, card grids, step-by-step procedures, inline-SVG figures |
+| Icons | Every control is genuine [Lucide](https://lucide.dev) markup — no icon font, no CDN |
+| Branding | Shares `~/.workshop-slides-preset.json` with `workshop-slides` — configure once, both skills match |
+| PDF | Cmd-P gives a contents page, then one chapter per page, forced to a light palette |
+
+**Default brand:** same as `workshop-slides` — dark slate (`#020617`) + orange accent (`#f97316`), Google Sans, Fira Code for code.
+
 ### `slides-to-pdf`
 
 Exports a generated HTML deck to a single multi-page PDF — one page per slide.
@@ -98,6 +124,14 @@ skills/
       template.html                 — base HTML template for generated decks
       favicon.ico                   — browser tab icon
     demo.html                       — 15-slide reference deck; every slide is
+                                      labelled with the components it demonstrates
+  workshop-handbook/
+    SKILL.md                        — skill instructions
+    assets/
+      template.html                 — viewer shell (sidebar bookmarks + flowing document)
+      build.py                      — assembler: template + content fragment → handbook
+      favicon.ico                   — browser tab icon
+    demo.html                       — 6-chapter reference handbook; every chapter is
                                       labelled with the components it demonstrates
   slides-to-pdf/
     SKILL.md                        — skill instructions

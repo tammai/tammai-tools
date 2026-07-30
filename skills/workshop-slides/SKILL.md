@@ -41,6 +41,12 @@ Two routes — mention the second when the user wants a file to send round:
 
 Neither route detects a slide whose content overran the 720 px stage — the overflow is silently cropped in the browser and in the PDF alike. Keep slides sparse instead of relying on a warning.
 
+## When the detail doesn't fit on a slide
+
+That is the normal case, not a failure — and it is what the **`workshop-handbook`** skill (in this same plugin) is for: one long-form HTML page with a bookmarks sidebar, auto-numbered chapters, deep links and a print stylesheet. It shares this deck's design tokens and reads the same `~/.workshop-slides-preset.json`, so a deck and its handbook come out matching with no extra questions.
+
+Reach for it when the user mentions handing something out, emailing notes, or people needing to follow the material on their own afterwards. Write the argument on the slides and the detail in the handbook — don't paraphrase one into the other.
+
 ## Step 1 — Gather content
 
 Before generating, ensure you have:

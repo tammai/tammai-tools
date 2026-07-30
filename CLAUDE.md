@@ -22,6 +22,14 @@ skills/
     assets/favicon.ico         — tab icon, inlined into the template as base64
     demo.html                  — 15-slide reference deck; every slide is labelled
                                  with the components and layout it demonstrates
+  workshop-handbook/
+    SKILL.md                   — the skill's instruction document
+    assets/template.html       — viewer shell: sidebar bookmarks + flowing document
+    assets/build.py            — assembler: template + content fragment → handbook
+                                 (stdlib only; same shape as workshop-slides/build.py)
+    assets/favicon.ico         — tab icon, inlined into the template as base64
+    demo.html                  — 6-chapter reference document; every chapter is
+                                 labelled with the components it demonstrates
   slides-to-pdf/
     SKILL.md                   — the skill's instruction document
     assets/export.py           — deck → single PDF, one headless-Chromium
@@ -84,6 +92,155 @@ The template is a **fixed 1280×720 stage** scaled to the viewport by `scaleDeck
 
 `.code-block` is **not** a `<pre>` — every line needs its own `.code-line` element (`.code-line.blank` for a gap), or raw newlines collapse and the snippet reflows into a single paragraph.
 
+## workshop-handbook skill
+
+The long-form counterpart to `workshop-slides`: one self-contained `.html` file, one scrolling
+document, a sidebar of bookmarks. Same design tokens, same preset file, inverted constraint — a
+deck crops what overruns a 720px stage, a handbook flows and the length is free.
+
+Deliberately **not** a variant of the deck template. The two share the `BRAND CONFIGURATION` block,
+the slate scale, the light-mode reversal and the `--dg-*` tokens verbatim; everything below that is
+different, because a fixed-stage presentation and a scrolling document have almost no layout in
+common. Trying to unify them would mean one template carrying both a `scaleDeck()` and a scrollspy.
+
+### The preset file is shared on purpose
+
+`build.py --preset` reads the same `~/.workshop-slides-preset.json`, with the same schema and the
+same `apply_preset()` logic. A handbook is normally handed out alongside the deck it accompanies, so
+one brand means one file, and a user who already configured their slides answers no questions here.
+The consequence to remember: **"Update my preset" in either skill changes both.** SKILL.md says so
+out loud at the point of asking.
+
+`set_var` replaces only the first match, same as the slides version — but here `--brand-bg` is
+declared **three** times: `:root`, the `[data-theme="light"]` override, and the `@media print` block.
+The last two must stay light or light mode and every printed page render on a dark background.
+
+### Headings are unnumbered, and that is what removed a whole bug class
+
+v0.7.0 dropped chapter and section numbering entirely. Before that, numbers had **two independent
+producers** — CSS counters for the page, `buildToc()` counting document position for the sidebar —
+and nothing enforced that they agreed. Two ways they drifted during development, both real:
+
+- **A `.chapter` with no `<h2>`.** CSS incremented for every `.chapter`; `buildToc()` bailed before
+  counting, so one headingless chapter put every later sidebar row one behind its own numeral.
+- **An `<h3>` nested inside a `<div>` or `<figure>`.** CSS matched `.chapter h3` (descendant) while
+  the script collected `:scope > h3`, so a nested one bumped the section counter without ever
+  appearing in the sidebar.
+
+Both are now structurally impossible: there is no counter to disagree with. Emphasis comes from an
+`<em>` run inside the heading instead, which also survives being lifted verbatim into a sidebar row.
+`figure` is the only counter left.
+
+What survived from that episode, because both are still real failures:
+
+- A headingless `.chapter` is a **blocking error** — `buildToc()` skips it, so it is unreachable.
+- A nested `<h3>` **warns** — it renders as a heading but never becomes a bookmark.
+- A hand-typed `1.` or `4.2` at the start of a heading **warns**: it reintroduces the numbering and
+  lands in the bookmark too, since the row takes the heading's own text.
+
+### There is no mobile header bar — the controls float, and there's no chrome left to reserve space for them
+
+The first responsive pass put a sticky `#topbar` across the top of narrow viewports, with the
+drawer trigger and a compact theme toggle embedded in it (mirroring a reference layout the user
+supplied). That bar is gone. `#menuToggle` and `#themeToggle` are now `position: fixed`
+`.float-btn`s, body-level, pinned to the top corners — `#themeToggle` at every viewport width,
+`#menuToggle` only below the drawer breakpoint. Removing the bar meant nothing reserved vertical
+space for them any more, so without a fix the mobile `.cover`'s kicker line would start at `y:32`
+— inside the buttons' own `y:20–58` band — and render half-hidden underneath them; the mobile
+`#handbook` padding-top is now `74px` specifically to clear that.
+
+**`#scrim` lives inside `#shell`, not beside it.** `#shell` is `position: relative; z-index: 1`,
+which makes it a stacking context — so `#sidebar`'s `z-index: 80` is only ever compared *inside*
+it, and from outside the whole shell is just "1". A body-level scrim therefore out-ranked the
+entire shell and painted over the open drawer no matter how high the drawer's own z-index went.
+Moving the scrim inside fixes it.
+
+**The backdrop has to beat the floating controls outright, not tie with them.** `.float-btn` and
+`#shell.drawer-open` were both `z-index: 65` at first — an equal value resolves by DOM order, and
+since both buttons are later siblings of `#shell`, they painted *over* the dimmed backdrop instead
+of being dimmed with everything else on the page. Verified with `elementFromPoint` at the theme
+button's own coordinates: it hit `#themeToggle` before the fix and `#scrim` after. The fix was
+lowering `.float-btn` to `50`, strictly below the drawer-open value — a tie is fragile precisely
+because "should win" and "does win" are unrelated facts about it.
+
+Beware measuring any of this too early — the drawer has a `0.24s` transform transition, and an
+`elementFromPoint` fired synchronously after `.click()` still reads the closed position and reports
+the wrong element on top. That looked exactly like the bug it had just fixed, twice, in two
+different sessions. `computer{action:"wait"}` for even a second between the click and the read is
+enough; there is no shortcut that avoids it.
+
+Two more that only showed up under real key/pointer events:
+
+- **`e.target.matches(...)` in a keydown guard throws when the target is not an Element.** With
+  nothing focused the target can be `document`, which has no `.matches` — the TypeError killed the
+  handler *before* the Escape branch ran, so Escape-to-close silently did nothing. Both keydown
+  handlers now go through a shared `isTyping(e)` that type-checks first.
+- **`#scrim.is-open` is not media-scoped.** Pressing **C** above the breakpoint dimmed the whole
+  page over a sidebar that had never moved. `setOpen()` now bails when the drawer media query does
+  not match.
+
+### The sidebar head is two columns, and the logo anchors to the sidebar's bottom, not its top
+
+`.sidebar-head` is a flex row of exactly two children: `.sidebar-head-text` (title + subtitle,
+stacked, `flex: 1` so it takes whatever width the close button doesn't) and `#closeToc`. Keeping
+the title and subtitle as separate divs inside one flex item — rather than two direct flex
+children — is what lets them stack vertically while the row itself stays horizontal.
+
+The watermark moved from the top of `<aside>` to its bottom, after `<nav id="toc">`. Sequencing it
+last in the DOM is necessary but not sufficient — a short bookmark list would still leave it
+stranded right under the last row instead of flush with the sidebar's bottom edge. `#toc { flex: 1
+}` is what closes that gap: inside `#sidebar`'s flex column, the nav grows to fill whatever height
+its content doesn't use, which pushes the watermark to the true bottom regardless of how many
+chapters the handbook has. A long list still scrolls normally, because the overflow is `#sidebar`'s
+to carry, not `#toc`'s.
+
+### Icons are genuine Lucide markup, not approximations
+
+Every control icon — menu, close, sun, moon, copy, check, the back-to-top arrow — is Lucide's own
+path data at its native `24 24` viewBox, `stroke-width="2"`, round caps and joins. Earlier versions
+had hand-tuned 16×16 paths at odd stroke widths (1.4–1.7) that only *looked* similar. There is no
+Lucide dependency to install: these are static SVG paths copied in, the same self-contained-file
+approach the rest of the skill uses. Rendered size is still controlled entirely by CSS (`.float-btn
+svg`, `#backToTop svg`, etc.) — changing the viewBox doesn't change how big an icon looks on the
+page, only how its internal coordinate space maps to that size.
+
+### Two print bugs found by rendering, not by reading
+
+Both were invisible in the source and obvious the moment the page was actually printed. Worth
+knowing before touching the `@media print` block:
+
+- **`transform: none` on `#sidebar` is load-bearing.** A printed page is ~816 CSS px wide (US Letter
+  at 96dpi), which is *inside* the `max-width: 1080px` drawer breakpoint — so the responsive rule
+  applies while printing and translates the sidebar 100% off its own box. The print block reset
+  `position` but not `transform`, and the contents page came out **completely blank**, with an empty
+  first page as the only symptom. Measured on the demo before and after.
+- **`#skip-link` needs hiding by id.** Chrome hides the controls via `button`, which is enough for
+  every control *except* the skip link — it has to be a real `<a href>` for keyboard users, and a
+  `position: fixed` element with a `translateY(-200%)` still lays out on paper. It printed as a grey
+  pill in the middle of page one.
+
+Measured output after both fixes: the 6-chapter `demo.html` → 12 pages at 612 × 792 pt, contents
+page first, then cover, then chapters one per page, forced light palette, diagrams vector.
+
+### `build.py` checks, and the one thing that would have killed them
+
+Same shape as the slides script — blocking errors only for structural breakage, everything else a
+warning — plus checks a handbook can fail that a deck cannot: duplicate `id`, a cross-reference to
+an id nothing produces (the ids are computed by mirroring the runtime's `slug()` in Python), a
+skipped heading level, an `<h1>` outside the cover, a `.code-block` with no `<pre>`.
+
+The one that matters most in practice is **`SLIDE_ISMS`**: `.slide-body`, `.cols-2`, `.code-line`,
+`.cmp-table`, `.stat-block` and six more have no rule in this stylesheet, so they render as unstyled
+prose with no error and no visual cue. An agent that has just read `workshop-slides/SKILL.md`
+reaches for them by reflex, which makes this the likeliest failure mode of the whole skill.
+
+**Every markup scan runs against `strip_code_samples()` first**, which blanks comments and the
+inside of `<pre>`/`<code>` space-for-character. Without it the checks are actively harmful here: a
+handbook's job is often to *document* markup, so its code samples are full of `id="…"`,
+`class="slide-body"` and `href="#…"` that are text, not structure. The demo alone would have
+reported a phantom `#handbook` anchor and, had a snippet shown the same `id=` twice, a false
+duplicate — which is precisely how a warning list gets ignored and then deleted.
+
 ## slides-to-pdf skill
 
 Exports a generated deck to a single PDF, one page per slide. `assets/export.py` is stdlib-only: **one** headless-Chromium `--print-to-pdf` invocation, no `playwright`, no per-slide loop, no merge step, and `pypdf` only as an optional nicety for the page report. It replaced a 761-line Playwright driver that did all of those things; if you are tempted to add any of them back, read the two measured findings below first.
@@ -116,7 +273,7 @@ Generates nine visual types as inline SVG in a flat pastel style — flowchart, 
 
 The shape/component vocabulary was derived by exploring Whimsical's own tool palettes, so the taxonomy deliberately mirrors a tool people already know. Star and Cross exist there but were scoped out here as decorative.
 
-**The `--dg-*` token block is duplicated verbatim in `soft-visuals/assets/template.html` and `workshop-slides/assets/template.html`.** That duplication is deliberate — it is what lets a generated `<svg>` be pasted into a slide deck untouched. If you add or rename a token, change **both** files; a token one side doesn't define renders as no fill, silently, with no error.
+**The `--dg-*` token block is duplicated verbatim in three files** — `soft-visuals/assets/template.html`, `workshop-slides/assets/template.html` and `workshop-handbook/assets/template.html`. That duplication is deliberate: it is what lets a generated `<svg>` be pasted into a slide deck *or* a handbook untouched. If you add or rename a token, change **all three**; a token one side doesn't define renders as no fill, silently, with no error. Each consumer's `build.py` has a `check_carryover()` that diffs its own template's token set against the generated file, so a *dropped* token is caught — but nothing cross-checks the three templates against each other, so an *added* one is on you.
 
 Constraints that are load-bearing, not stylistic preference:
 
