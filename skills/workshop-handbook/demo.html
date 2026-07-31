@@ -637,14 +637,19 @@
        injected at load (see the script) so the author only ever writes
        `<li class="done">…</li>`, same as the code block's copy button.
 
-       A flex row with a real icon as its first child centres exactly via
-       `align-items: center`, which is what a hand-tuned absolute-position
-       offset on a ::before/::after pair kept landing a pixel or two off no
-       matter how it was re-measured. Overriding the base bullet with
+       Items start at the top and the icon is nudged down by half the
+       difference between the first line box and its own height, so it sits
+       optically centred on the *first* line. `align-items: center` — which
+       this used to be — is exact on a one-line item but puts the mark in the
+       vertical middle of a wrapped one, level with nothing, and a checklist
+       item that mentions a command or a URL wraps often. The offset is
+       derived from `1lh` rather than hand-tuned, so it stays correct if the
+       font size changes; that is what the absolute-positioned ::before it
+       replaced could never manage. Overriding the base bullet with
        `content: none` clears it rather than layering a second mark. */
     .list.check li {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 10px;
       padding-left: 0;
     }
@@ -654,10 +659,26 @@
       flex: none;
       width: 18px;
       height: 18px;
+      /* Plain value first as the fallback where `lh` is unsupported; the
+         calc() below wins wherever it resolves. */
+      margin-top: 5px;
+      margin-top: calc((1lh - 18px) / 2);
       color: var(--slate-600);
     }
     .check-icon svg { width: 100%; height: 100%; }
     .list.check li.done .check-icon { color: var(--brand-accent); }
+
+    /* Everything except the icon is wrapped (by the script below) into a
+       single flex item. Without this, each inline child of the <li> --
+       plain text runs as much as <code>/<em> tags -- becomes its own flex
+       item and gets flex-shrunk individually, which forces the base
+       `code { word-break: break-word }` rule to hyphenate mid-word inside
+       a <code> pill (e.g. "hr.bigin.tech" splitting into "hr.bigin.te" /
+       "ch"). Treating the content as one block lets it wrap normally. */
+    .check-content {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
 
     /* --- Definition list --- */
     .deflist {
@@ -1784,6 +1805,8 @@ Start-Process "Docker Desktop"</code></pre>
       <li class="done">Built through <code>build.py</code>, warnings read</li>
       <li>Bookmarks clicked, cross-references followed</li>
       <li>Printed to PDF once, to check the pagination</li>
+      <li>Checked on a narrow window that the generated form URL reads
+          <code>hr.bigin.tech</code> and not <code>localhost</code></li>
     </ul>
 
     <div class="callout tip">
@@ -2216,7 +2239,15 @@ Start-Process "Docker Desktop"</code></pre>
       const icon = document.createElement('span');
       icon.className = 'check-icon';
       icon.innerHTML = li.classList.contains('done') ? SQUARE_CHECK : SQUARE;
-      li.prepend(icon);
+      // Move the <li>'s existing content into one wrapper span so it is a
+      // single flex item alongside the icon, instead of every inline child
+      // (plain text runs, <code>, <em>) being its own flex item that gets
+      // shrunk independently -- see the .check-content comment above.
+      const content = document.createElement('span');
+      content.className = 'check-content';
+      while (li.firstChild) content.appendChild(li.firstChild);
+      li.appendChild(icon);
+      li.appendChild(content);
     });
   })();
 </script>

@@ -204,6 +204,37 @@ approach the rest of the skill uses. Rendered size is still controlled entirely 
 svg`, `#backToTop svg`, etc.) — changing the viewBox doesn't change how big an icon looks on the
 page, only how its internal coordinate space maps to that size.
 
+### A flex `<li>` needs the author's content wrapped, or every inline child shrinks on its own
+
+`.list.check li` is `display: flex`, and the load-time script used to only *prepend* the
+`.check-icon` span. Everything the author wrote stayed a direct child, so each inline tag **and each
+plain-text run** became its own flex item — and with the default `flex-shrink: 1` / `min-width:
+auto`, a `<code>` was squeezed below its natural width on a tight row. The base `code { word-break:
+break-word }` then hyphenated *inside* the pill. Measured at a 420px viewport: `hr.bigin.tech`
+rendered 56.2px wide and 75.5px tall — the token broken across three lines within its own box —
+against 117.4 × 22.7 once wrapped. Moving the content into one `.check-content` span
+(`flex: 1 1 auto; min-width: 0`) is the fix; the icon stays the only other flex item.
+
+The demo never caught it because its checklist items were plain text plus one short
+`<code>build.py</code>`, which is too narrow to be squeezed. **A short inline `<code>` is not a test
+case, and neither is a whole-item one** — a `<li>` whose entire content is wrapped in `<code>` is a
+single flex item already. The regression case is a long token inside a longer sentence, which is
+what `demo.html`'s checklist now carries.
+
+Worth generalising before adding any other script-injected chrome to a flex container: the guard is
+`:scope > .check-icon`, so the pass stays idempotent, but a *second* injected sibling would
+reintroduce exactly this problem.
+
+Wrapping the content is also what made the row's `align-items` matter. It was `center`, which is
+exact on a one-line item and puts the mark in the vertical middle of a wrapped one — level with
+nothing, and now that a checklist item can carry a URL or a command it wraps often. The row is
+`flex-start` with the icon nudged down by `calc((1lh - 18px) / 2)`, which resolves to **4.71875px**
+at the current type scale — the same position `center` produced on a one-line item, so nothing moved
+for the common case. Deriving it from `1lh` rather than typing a number is the point: it is what the
+absolute-positioned `::before` this replaced could never do, and it is why the old comment's warning
+about hand-tuned offsets does not apply to it. A plain `margin-top: 5px` precedes the `calc()` as
+the fallback wherever the `lh` unit is unsupported.
+
 ### Two print bugs found by rendering, not by reading
 
 Both were invisible in the source and obvious the moment the page was actually printed. Worth
