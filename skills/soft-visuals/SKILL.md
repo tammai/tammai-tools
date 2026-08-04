@@ -24,7 +24,7 @@ Generates diagrams, wireframes, and board layouts as inline SVG in a soft, flat,
 style. Output is a single self-contained `.html` file the user opens in any browser —
 dark/light toggle built in, no server, no image files.
 
-## Nine visual types
+## Ten visual types
 
 | Type | Use for | Signature elements |
 |---|---|---|
@@ -37,6 +37,7 @@ dark/light toggle built in, no server, no image files.
 | **Timeline / Gantt** | Schedules, roadmaps, phased plans | Column time axis, bars sized in column units, `today` marker |
 | **Kanban board** | Work state, sprint boards, pipelines | `--dg-surface` columns, neutral cards on `--brand-bg`, hue in the tags |
 | **User journey map** | Experience across stages, research synthesis | Stage columns × lens rows, mood faces in the *Feeling* row |
+| **Infographic** | Data storytelling, stats, steps, comparisons, SWOT | Rendered with the **AntV Infographic** engine — see the Infographic section below |
 
 If the request spans two (e.g. "show the architecture and the deploy flow"), produce
 **one file with two `.figure` blocks** rather than two files.
@@ -53,6 +54,35 @@ If the request spans two (e.g. "show the architecture and the deploy flow"), pro
 If the user gave only a topic, build something sensible and complete rather than asking a
 list of questions. Prefer **5–9 nodes**; past that a diagram stops explaining and starts
 documenting.
+
+## Infographic (AntV engine) — different workflow
+
+When the visual is an **infographic** (data storytelling: stats, steps, comparisons, SWOT,
+quadrants, org trees, charts, wordclouds), do **NOT** hand-draw SVG. Use the AntV
+Infographic engine instead — it ships ~54 polished templates and renders them from a tiny
+DSL to SVG in the browser:
+
+1. Load the **`antv-infographic`** skill (`skill_view(name='antv-infographic')`) — it holds
+   the full template list, DSL syntax rules, HTML shell with Google Sans + Export SVG
+   button, and the SSR verification script.
+2. Pick the template category by content:
+   - Steps / phases / roadmap → `sequence-*` (timeline, funnel, pyramid, snake, 3D stairs)
+   - Multi-role interaction → `sequence-interaction-*` (swimlanes + relations)
+   - Parallel points → `list-row-*` / `list-column-*` / `list-grid-*` / `list-waterfall-*`
+   - Two-sided comparison → `compare-binary-*`; SWOT → `compare-swot`; quadrants → `compare-quadrant-*`
+   - Tree / org → `hierarchy-tree-*`; brainstorm → `hierarchy-mindmap-*`
+   - Trend line → `chart-line-plain-text`; bars → `chart-bar-plain-text` / `chart-column-simple`; share → `chart-pie-*`; words → `chart-wordcloud`
+   - Node relations → `relation-*`
+3. Write the DSL (first line `infographic <template-name>`, then `data` + `theme` blocks),
+   always adding icons to main items and `theme.base.text.font-family Google Sans`.
+4. Generate the HTML, verify via SSR (`renderToString` from `@antv/infographic/ssr`),
+   save to `~/infographic-demo/` and `open` it.
+5. Theming: keep the `--dg-*` pastel palette by passing the hex values into the DSL
+   `palette` (bare hexes, space-separated) — e.g. `palette #a5b4fc #a7f3d0 #fcd34d` for the
+   soft look.
+
+Same deliverable contract as the rest of this skill: one self-contained HTML file the user
+opens in a browser, content in the user's language, editable on request.
 
 ## Step 2 — Read the template and the gallery
 
@@ -87,8 +117,7 @@ bracket, tooltip tail, org-chart bus, mood faces) are already correct there.
 </div>
 ```
 
-`class="figure narrow"` caps a visual at 400px (phone and watch frames), `medium` at
-760px. A plain `.figure` is 1160px.
+`class="figure narrow"` caps at 400px (phone and watch frames), `medium` at 760px. A plain `.figure` is 1160px.
 
 ### Tokens
 
@@ -141,10 +170,8 @@ work in both themes and match the deck.
 
 - **Dashed** (`stroke-dasharray="7 6"`) = async, optional, or planned.
 - **Curved** (`C`) = mindmap branches and soft flows.
-- **Labelled** = a chip filled with `var(--brand-bg)` sitting on the line. Any label that
-  crosses another line or lifeline **needs** that chip, or the line reads through the text.
-- **Annotation leader** = dashed, thin, **no arrowhead**. An arrow means flow; a note is
-  not a step.
+- **Labelled** = a chip filled with `var(--brand-bg)` sitting on the line.
+- **Annotation leader** = dashed, thin, **no arrowhead**.
 - **Org chart edges** = no arrowheads at all.
 
 ### 22 wireframe components
@@ -156,98 +183,48 @@ work in both themes and match the deck.
 
 **5 frames:** `plain` · `window` (desktop browser) · `phone` · `tablet` · `watch`
 
-All of them are in the gallery's *Wireframe components* and *Wireframe frames* grids.
+All of them are in the gallery.
 
 ### Layout rules
 
-**Draw connectors first, shapes second.** Shapes then paint over the line ends and any
-tiny overshoot is hidden.
+**Draw connectors first, shapes second.** Shapes then paint over the line ends.
 
 **Stop every connector 6px short of the target's edge**, so the arrowhead sits in the gap
-instead of crossing the border. Derive the number from the shape's real geometry — a card
-at `y=90 height=64` has edges at 90 and 154, so an arrow into its top ends at `84` and one
-leaving its bottom starts at `154`. Getting this wrong puts arrowheads *inside* shapes,
-which is the most common way these look sloppy. Watch the shapes whose edge is not their
-bounding box: a `cylinder` drawn from `y=309` with `ry=9` has its visible top at **300**, so
-an arrow into it ends at `294`.
+instead of crossing the border.
 
 **Start every connector at its source's edge too.** A line that begins in the gap beside
-its source belongs to nothing — the reader cannot tell what it leaves. An arrow out of the
-right side of a card at `x=200 width=200` starts at `400`, not wherever the label happens
-to sit.
+its source belongs to nothing.
 
-**Keep labels off other geometry.** A bar label that a `today` marker crosses, or a shape
-label that its own outgoing connector runs through, reads as a rendering bug. Either move
-the label clear or start the connector below it.
+**Keep labels off other geometry.** Move labels clear or start connectors below them.
 
 Per type:
-
-- **Flowchart** — one dominant axis (usually top-down). Branch sideways at the `diamond`
-  only. Failure paths take `--dg-rose`; the happy path stays neutral.
-- **Architecture** — layer it: clients on top, then edge, then services, then data. Dashed
-  `group` around the trust boundary, `cloud` outside it, all datastores one shared hue. Give
-  the `cloud` a hue of its own — sharing one with internal compute says the third party *is*
-  your compute. Remember the `actor` label sits below the figure, so an arrow leaving an
-  actor starts below that label, not at the shape.
-- **Wireframe** — **drop the hues.** `--dg-surface` / `--dg-border` greys with a single
-  accent for the primary action or active tab, never both. Copy stays as placeholder bars,
-  never real sentences — real words make reviewers argue about the words.
-- **Mindmap** — accent centre. Each branch owns one hue and its stems and leaf rules
-  inherit it. Balance branches left and right. Leaves are text on a tinted rule, not
-  boxes — boxing every leaf turns a mindmap into an org chart.
-- **Org chart** — **no arrowheads**; reporting is a relationship, not a flow. One hue per
-  level so depth reads at a glance, accent on the root. The bus is one path per parent: up
-  from the leftmost child, `Q` corner, along, `Q` corner, down to the rightmost; middle
-  children get their own short drop.
-- **Sequence diagram** — participant headers in a row, dashed lifelines down. Requests
-  solid and neutral, **returns dashed and mint**, so round trips read without following
-  labels. Draw activation bars *before* the arrows so arrowheads land on top. Self-calls
-  go out-down-back.
-- **Timeline / Gantt** — a column grid is the time axis and every bar is positioned and
-  sized in **column units** (`x = GX + cw * start`), never by eye. One hue per workstream;
-  the only accent is the `today` marker.
-- **Kanban** — `--dg-surface` columns, cards on `--brand-bg` so they read as lifted with
-  no shadow. **Hue lives in the tags**, not the cards; four columns of coloured cards is
-  noise. Leave 6px between a card's tag and its bottom border.
-- **User journey map** — stages are columns, lenses are rows. Use **mood faces** in the
-  *Feeling* row rather than words: the emotional dip is the point of the artifact and it
-  should be visible without reading. Opportunities take a hue by sentiment — mint for a
-  clear win, rose where the journey is losing people.
+- **Flowchart** — one dominant axis (usually top-down). Branch sideways at the `diamond` only.
+- **Architecture** — layer it: clients on top, then edge, then services, then data.
+- **Wireframe** — **drop the hues.** `--dg-surface` / `--dg-border` greys with a single accent.
+- **Mindmap** — accent centre. Each branch owns one hue.
+- **Org chart** — **no arrowheads**. One hue per level, accent on the root.
+- **Sequence diagram** — participant headers in a row, dashed lifelines down. Requests solid, returns dashed and mint.
+- **Timeline / Gantt** — column grid is the time axis. One hue per workstream.
+- **Kanban** — `--dg-surface` columns, cards on `--brand-bg`. Hue lives in the tags.
+- **User journey map** — stages are columns, lenses are rows. Use mood faces in the *Feeling* row.
 
 ## Step 4 — Save and verify
 
-Save as `[kebab-case-title]-visual.html` — where the user asked, or the working directory if they didn't say.
+Save as `[kebab-case-title]-visual.html`.
 
-Then check the two things that silently break a visual:
-
-1. **Nothing outside the viewBox.** Content past `viewBox` width/height is simply
-   invisible — no error, no warning. Add up your coordinates; the furthest shape edge plus
-   a small margin is your viewBox size. Watch for labels and chips hanging below the last
-   row.
-2. **Marker ids unique per document.** Two `<svg>` blocks in one file must not both define
-   `id="aFlow"`; duplicate ids are invalid and both references resolve to the first.
-   Suffix them (`aFlow`, `aArch`, `aSeqRet`).
-
-Rule 1 has one backstop, and only when the `<svg>` ends up in a deck: `workshop-slides/assets/build.py` warns at assembly time when a shape's attributes prove an overflow. It was added after a deck shipped with a card cut off — a documented manual check catches nothing if nobody runs it. That check is deliberately partial (it skips transforms, curves and text width), and **nothing measures a visual saved on its own**, so getting the coordinates right here is the fix, not the fallback.
-
-Paste this in DevTools to check both at once:
-
-```js
-document.querySelectorAll('svg').forEach((s, i) => {
-  const vb = s.viewBox.baseVal, b = s.getBBox();
-  if (vb.width && (b.x < -1 || b.y < -1 ||
-      b.x + b.width > vb.width + 1 || b.y + b.height > vb.height + 1))
-    console.warn('overflows viewBox', i, [b.x, b.y, b.width, b.height], [vb.width, vb.height]);
-});
-const seen = {};
-document.querySelectorAll('[id]').forEach(e => seen[e.id] = (seen[e.id] || 0) + 1);
-Object.entries(seen).filter(([, n]) => n > 1).forEach(d => console.warn('duplicate id', d));
-```
+Then check:
+1. **Nothing outside the viewBox.** Content past `viewBox` width/height is simply invisible.
+2. **Marker ids unique per document.** Two `<svg>` blocks must not both define `id="aFlow"`. Suffix them.
+3. **Export SVG buttons appear automatically.** `assets/template.html` attaches an
+   **Export SVG** button (top-right of each `.figure`) via JS — no per-figure markup needed.
+   The export resolves `var(--dg-*)` to computed colours and inlines the Google Fonts
+   `@font-face`, so the downloaded `.svg` keeps the pastel look standalone. Filename derives
+   from the `.figure-label` (or `visual`). The button is hidden in print. No action needed
+   from you beyond using `assets/template.html` as the shell.
 
 ## Reusing a visual in a slide deck
 
-The `--dg-*` tokens are defined **identically** here and in
-`workshop-slides/assets/template.html`, so an `<svg>` lifts straight into a slide:
+The `--dg-*` tokens are defined **identically** in `workshop-slides`, so an `<svg>` lifts straight into a slide:
 
 ```html
 <div class="slide-body cols-2">
@@ -256,48 +233,14 @@ The `--dg-*` tokens are defined **identically** here and in
 </div>
 ```
 
-Add `class="diagram"` for the deck's sizing. It matters most when the `<svg>` carries
-`width`/`height` attributes rather than a bare `viewBox`: measured, a `width="700"` SVG in a
-568px column reaches **132px into the next column** and paints over it — not cropped, so
-nothing complains at render time. With the class it is constrained to 536px and fits.
-(`build.py` warns when it sees an attribute-sized `<svg>` without the class.) A
-`viewBox`-only `<svg>` is already capped by the column's flex layout, so the class is
-harmless but not load-bearing there.
-
-If you add a **new** token here, add it there too — a token the deck doesn't define renders
-as no fill, silently.
+Add `class="diagram"` for the deck's sizing.
 
 ## Hard rules
 
-- **No shadows. No `filter:`, no `feDropShadow`.** Both measured: a filtered region forces
-  Chrome's print-to-PDF to rasterise that area into a bitmap (so a deck exported to PDF
-  stops being vector), and a faked offset-rect shadow peeks out from under the shape's own
-  border in light mode and reads as a misaligned fill. The style is flat.
-- **One stroke width (`1.75`) and one corner radius (`12`)** across every shape. That
-  evenness is most of the look.
-- **Translucent `*-fill` tokens, never solid colours.** A 16% wash reads as a muted tint
-  on the dark page and a pastel on the light one, so one value covers both themes.
-- **At most one accent element per visual.** Two focal points means none. Some types carry
-  their whole meaning in hue and take **no** accent — a kanban board (hue is in the tags) and
-  a user journey map (hue is sentiment). Don't bolt one on to satisfy the rule.
-- **Hue carries meaning.** Same hue = same kind of thing, and the same thing keeps its hue
-  across every figure in the file. Don't rotate hues for variety — and don't let two
-  different kinds collide, e.g. internal workers and a third-party `cloud` sharing cyan.
-- `var()` works in SVG presentation attributes (`fill`, `stroke`, `font-family`, `rx`).
-  The only caveat: presentation attributes lose to any CSS rule, having lowest priority.
+- **No shadows. No `filter:`, no `feDropShadow`.** The style is flat.
+- **One stroke width (`1.75`) and one corner radius (`12`)** across every shape.
+- **Translucent `*-fill` tokens, never solid colours.**
+- **At most one accent element per visual.** Two focal points means none.
+- **Hue carries meaning.** Same hue = same kind of thing.
+- `var()` works in SVG presentation attributes.
 - Keep `role="img"` and a real `aria-label` — a sentence, not "diagram".
-
-## Pre-save checklist
-
-- [ ] Connectors drawn before shapes, each stopping ~6px short of the target edge
-- [ ] No arrowhead landing inside a shape; org-chart edges have no arrowheads at all
-- [ ] All content inside the `viewBox` (run the snippet above)
-- [ ] Marker ids unique across the whole file
-- [ ] No `filter`, no `feDropShadow`, no shadow rects
-- [ ] Every colour a `--dg-*` / `--brand-accent` token, no hardcoded hex
-- [ ] At most one accent element (none for kanban and journey maps)
-- [ ] No two different kinds of thing sharing a hue; recurring things keep theirs
-- [ ] Labels that cross a line or lifeline sit on a `--brand-bg` chip
-- [ ] Checked in **both** themes (press **T**)
-- [ ] Portrait visuals use `.figure.narrow`
-- [ ] `role="img"` + a descriptive `aria-label` on every `<svg>`

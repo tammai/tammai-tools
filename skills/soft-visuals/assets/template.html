@@ -182,7 +182,7 @@
     }
 
     /* One visual, optionally with its own caption */
-    .figure { width: 100%; }
+    .figure { position: relative; width: 100%; }
 
     .figure > svg {
       display: block;
@@ -292,6 +292,42 @@
     :root[data-theme="light"] #themeToggle .icon-moon { display: flex; }
 
     /* ============================================================
+       FIGURE EXPORT — per-figure SVG download button (bottom-right).
+       Attached automatically by JS to every .figure block. Same
+       height & style family as #themeToggle so the toolbar reads as
+       one set; icon + "SVG Export" label makes the action obvious.
+    ============================================================ */
+    .figure-export {
+      position: absolute;
+      bottom: 4px;
+      right: 0;
+      z-index: 5;
+      height: 38px;
+      padding: 0 12px;
+      background: transparent;
+      border: 1px solid var(--slate-700);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--slate-300);
+      font-family: var(--brand-font-main);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .figure-export:hover {
+      background: var(--slate-800);
+      color: var(--brand-accent);
+      border-color: var(--brand-accent);
+    }
+
+    .figure-export svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ============================================================
        PRINT — keep the flat look and the page background
     ============================================================ */
     @media print {
@@ -302,6 +338,7 @@
         print-color-adjust: exact;
       }
       #themeToggle { display: none !important; }
+      .figure-export { display: none !important; }
       .figure { break-inside: avoid; }
     }
   </style>
@@ -367,6 +404,109 @@
     document.addEventListener('keydown', e => {
       if (e.key === 't' || e.key === 'T') { e.preventDefault(); toggle(); }
     });
+  })();
+
+  /* ================================================================
+     FIGURE EXPORT — one "Export SVG" button per .figure block.
+     Resolves CSS variables (var(--dg-*)) to computed colours, inlines
+     the Google Fonts @font-face so text keeps its typeface, and
+     downloads a standalone SVG that preserves the pastel look in any
+     viewer (Preview, browser, Illustrator…).
+  ================================================================ */
+  (function () {
+    const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Fira+Code:wght@400&display=swap';
+    // Fallback chain baked into every exported <text>/<tspan> that has no
+    // explicit font-family, so a standalone SVG never falls back to serif.
+    const FONT_FALLBACK = "'Google Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif";
+    let fontCss = '';
+
+    function ensureFonts() {
+      if (fontCss !== '' || !navigator.onLine) return Promise.resolve();
+      return fetch(FONT_CSS, { mode: 'cors' })
+        .then(r => (r.ok ? r.text() : ''))
+        .then(css => { fontCss = css; })
+        .catch(() => { fontCss = ''; });
+    }
+
+    // Replace var(--dg-*) in presentation attributes with computed
+    // colours, so the exported SVG renders without the page's CSS.
+    function resolveVars(svg) {
+      const el = svg.cloneNode(true);
+      const scope = el.ownerDocument.createElement('div');
+      scope.style.display = 'none';
+      scope.appendChild(el);
+      document.body.appendChild(scope);
+      el.querySelectorAll('*').forEach(node => {
+        for (const attr of ['fill', 'stroke', 'color', 'stop-color', 'flood-color', 'font-family']) {
+          const v = node.getAttribute(attr);
+          if (v && v.includes('var(')) {
+            const resolved = getComputedStyle(node).getPropertyValue(attr).trim();
+            if (resolved) node.setAttribute(attr, resolved);
+          }
+        }
+      });
+      scope.remove();
+      return el;
+    }
+
+    function svgToDownloadable(svg) {
+      const clone = resolveVars(svg);
+      // Give every text element a sans-serif fallback chain (unless it
+      // already declares its own font, e.g. Fira Code for code labels).
+      clone.querySelectorAll('text, tspan').forEach(node => {
+        if (!node.getAttribute('font-family')) {
+          node.setAttribute('font-family', FONT_FALLBACK);
+        }
+      });
+      const defs = clone.querySelector('defs');
+      if (defs && fontCss) {
+        const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        style.textContent = fontCss;
+        defs.insertBefore(style, defs.firstChild);
+      }
+      const vb = (clone.getAttribute('viewBox') || '0 0 720 420').split(/\s+/);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+      clone.setAttribute('width', vb[2]);
+      clone.setAttribute('height', vb[3]);
+      return clone;
+    }
+
+    function downloadSvg(figure, svg) {
+      const xml = new XMLSerializer().serializeToString(svgToDownloadable(svg));
+      const blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const label = (figure.querySelector('.figure-label') || {}).textContent || 'visual';
+      a.href = url;
+      a.download = label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-visual.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function makeButton(figure) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'figure-export';
+      btn.title = 'Export this visual as SVG';
+      btn.setAttribute('aria-label', 'Export this visual as SVG');
+      btn.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/>' +
+        '<line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+        '<span>SVG Export</span>';
+      btn.addEventListener('click', async () => {
+        await ensureFonts();
+        const svg = figure.querySelector('svg');
+        if (svg) downloadSvg(figure, svg);
+      });
+      figure.appendChild(btn);
+    }
+
+    document.querySelectorAll('.figure').forEach(makeButton);
   })();
 </script>
 

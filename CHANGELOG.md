@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.0] — 2026-08-04
+
+### Added
+- **New skill: `antv-infographic`.** Renders infographics from a tiny DSL through the open-source AntV Infographic engine (~54 built-in templates: list, sequence, sequence-interaction, compare binary/SWOT/quadrant, hierarchy tree/mindmap, chart line/bar/pie/wordcloud, relation). The complete HTML shell lives inline in `SKILL.md`'s template block (no `assets/` dir) and is extracted at generation time, so generated files stay in sync with the skill by construction. The shell matches `soft-visuals`: same header (kicker / h1 / lede / orange rule), a 38×38 dark/light toggle (top-right) and an `SVG Export` button (bottom-right, icon + label); both restyle through CSS variables toggled by a `dark` class on `<html>`. Dark/light re-renders the canvas via `theme.type dark|light` injection (keeps the `type` line's indentation — the swap regex uses `[ \t]*`, never `\s*`). Exported SVG is post-processed with `applyFontFallback()` so every `Google Sans` reference (root attribute, inline styles, foreignObject divs) gains a `system-ui, …, sans-serif` chain — otherwise a standalone SVG whose webfont fails renders in default serif.
+- **`soft-visuals` delegates infographic requests to `antv-infographic`** — new "Infographic (AntV engine)" section and a tenth visual type row; the nine hand-drawn types and their export flow are unchanged.
+- **`soft-visuals/assets/template.html` exports standalone SVG with resolved colors + font fallback** — the per-figure Export SVG button (bottom-right, icon + label) serializes the figure with `var(--dg-*)` resolved to computed colors, Google Fonts `@font-face` inlined into `<defs>`, and a sans-serif fallback chain on every `text`/`tspan`.
+
+### Changed
+- `soft-visuals` frontmatter description kept its long trigger-phrase list (marketplace routing); body updated to "Ten visual types".
+
 ## [0.8.0] — 2026-07-30
 
 ### Added

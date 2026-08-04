@@ -40,6 +40,11 @@ skills/
     assets/gallery.html        — reference: every shape, connector and layout
     demo.html                  — worked example: all nine types on one product,
                                  each captioned with the prompt that produced it
+  antv-infographic/
+    SKILL.md                   — the skill's instruction document; HTML shell
+                                 (title/desc header, dark/light toggle, SVG
+                                 export button) lives inline in the template
+                                 block, extracted at generation time
 ```
 
 Skills are discovered automatically from the `skills/` directory. Each skill folder must contain a `SKILL.md` with YAML frontmatter (`name`, `description`, `triggers`).
@@ -300,7 +305,7 @@ Prior art worth reading before changing any of this: `~/.hermes/skills/html-slid
 
 ## soft-visuals skill
 
-Generates nine visual types as inline SVG in a flat pastel style — flowchart, architecture, wireframe, mindmap, org chart, sequence diagram, Gantt timeline, kanban board, user journey map. Output is a single `.html` viewer.
+Generates nine visual types as inline SVG in a flat pastel style — flowchart, architecture, wireframe, mindmap, org chart, sequence diagram, Gantt timeline, kanban board, user journey map. Output is a single `.html` viewer. **Infographic requests (data storytelling: stats, steps, comparisons, SWOT, quadrants, org trees, charts, wordclouds) delegate to the `antv-infographic` skill** — see below.
 
 The shape/component vocabulary was derived by exploring Whimsical's own tool palettes, so the taxonomy deliberately mirrors a tool people already know. Star and Cross exist there but were scoped out here as decorative.
 
@@ -317,6 +322,17 @@ Constraints that are load-bearing, not stylistic preference:
   - Two traps it hit in development, both worth not re-learning: both templates *mention* `<svg>` in prose (one in a CSS comment, one in an HTML comment), and a naive `<svg…>(.*?)</svg>` pairs that prose opening with the real diagram's closing tag — the check then silently never fires on any deck built from the template. Comments are stripped first and each opening is resolved against the next `</svg>` independently. Separately, `getBBox()` **excludes stroke width**, so a 2.875px overflow of a 1.75px-stroked edge measures as 2.0 — worth knowing if you re-add a runtime measurement, since the number is a floor, not the true overflow.
 
 `assets/gallery.html` is generated, not hand-maintained in place; it is the reference the skill tells Claude to copy from, so keep its coverage complete when adding a shape. **A geometry or hue mistake in the gallery is not a cosmetic bug — it propagates into every visual generated from that pattern**, since SKILL.md explicitly tells Claude to copy rather than author. `demo.html` is the end-to-end check on that: all nine types built the way the skill prescribes, so a defect in a gallery pattern shows up there rather than in a user's output.
+
+## antv-infographic skill
+
+Infographics are rendered by the **AntV Infographic** engine (open-source, MIT; ~54 built-in templates) rather than hand-drawn SVG. `SKILL.md` carries the full template list, the DSL syntax rules, and the complete HTML shell inline in its template block — there is no `assets/` directory, and the shell is extracted from `SKILL.md` at generation time, so the demo files stay in sync with the skill by construction.
+
+Design decisions worth keeping in mind:
+
+- **HTML shell matches `soft-visuals`** — same header structure (kicker / `h1` / lede / orange rule), same button vocabulary: a dark/light toggle (38×38, top-right) and an `SVG Export` button (bottom-right, icon + label). Both buttons restyle through CSS variables (`--btn-*`, `--page-*`) toggled by a `dark` class on `<html>`, so theme switching restyles the whole page, not just the canvas.
+- **Dark/light re-renders, not re-styles.** The infographic itself is a canvas re-rendered from the DSL with `theme.type dark|light` injected (or swapped in place — the toggle's regex must keep the `type` line's leading indentation: use `[ \t]*`, never `\s*`, or the line loses its indent and `palette` gets eaten).
+- **Exported SVG gets a sans-serif fallback.** AntV puts text in `<foreignObject>` divs plus a `font-family` on the root `<svg>`; the export post-processes the serialized SVG with `applyFontFallback()`, which rewrites every `Google Sans` reference (attribute, inline style, root) to a full `'Google Sans', system-ui, …, sans-serif` chain. Without this, a standalone SVG whose webfont fails renders in default serif.
+- **`{title}`/`{desc}` placeholders** feed both the page `<title>` and the `<h1>`/`.lede` header; `{syntax}` is the DSL, `{slug}` the filename stem.
 
 ## Adding a new skill
 
