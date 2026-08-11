@@ -1,6 +1,6 @@
 ---
 name: antv-infographic
-description: Use when creating infographics from content (信息图).
+description: Use when creating infographics from content.
 ---
 
 # AntV Infographic
@@ -9,20 +9,20 @@ Render high-quality infographics from a simple DSL. Backed by the open-source [A
 
 ## When to use
 
-- User asks for an infographic (信息图) from text content: timelines, steps, comparisons, SWOT, org charts, stats, wordclouds.
+- User asks for an infographic from text content: timelines, steps, comparisons, SWOT, org charts, stats, wordclouds.
 - User needs a reusable template library for infographics.
 
 ## Template library (full list, grouped)
 
 | Category | Templates |
 |---|---|
-| list (并列要点) | list-row-horizontal-icon-arrow, list-column-done-list, list-column-simple-vertical-arrow, list-column-vertical-icon-arrow, list-grid-badge-card, list-grid-candy-card-lite, list-grid-ribbon-card, list-sector-plain-text, list-waterfall-badge-card, list-waterfall-compact-card, list-zigzag-down-compact-card, list-zigzag-down-simple, list-zigzag-up-compact-card, list-zigzag-up-simple |
-| sequence (步骤/阶段) | sequence-ascending-stairs-3d-underline-text, sequence-ascending-steps, sequence-circular-simple, sequence-color-snake-steps-horizontal-icon-line, sequence-cylinders-3d-simple, sequence-filter-mesh-simple, sequence-funnel-simple, sequence-horizontal-zigzag-underline-text, sequence-mountain-underline-text, sequence-pyramid-simple, sequence-roadmap-vertical-plain-text, sequence-roadmap-vertical-simple, sequence-snake-steps-compact-card, sequence-snake-steps-simple, sequence-snake-steps-underline-text, sequence-stairs-front-compact-card, sequence-stairs-front-pill-badge, sequence-timeline-rounded-rect-node, sequence-timeline-simple, sequence-zigzag-pucks-3d-simple, sequence-zigzag-steps-underline-text |
-| sequence-interaction (泳道交互) | sequence-interaction-default-badge-card, sequence-interaction-default-animated-badge-card, sequence-interaction-default-compact-card, sequence-interaction-default-capsule-item, sequence-interaction-default-rounded-rect-node |
-| compare (对比) | compare-binary-horizontal-badge-card-arrow, compare-binary-horizontal-simple-fold, compare-binary-horizontal-underline-text-vs, compare-hierarchy-left-right-circle-node-pill-badge, compare-quadrant-quarter-circular, compare-quadrant-quarter-simple-card, compare-swot |
-| hierarchy (层级树) | hierarchy-mindmap-branch-gradient-capsule-item, hierarchy-mindmap-level-gradient-compact-card, hierarchy-structure, hierarchy-tree-curved-line-rounded-rect-node, hierarchy-tree-tech-style-badge-card, hierarchy-tree-tech-style-capsule-item |
-| chart (图表) | chart-bar-plain-text, chart-column-simple, chart-line-plain-text, chart-pie-compact-card, chart-pie-donut-pill-badge, chart-pie-donut-plain-text, chart-pie-plain-text, chart-wordcloud |
-| relation (关系流) | relation-dagre-flow-tb-animated-badge-card, relation-dagre-flow-tb-animated-simple-circle-node, relation-dagre-flow-tb-badge-card, relation-dagre-flow-tb-simple-circle-node |
+| list (parallel points) | list-row-horizontal-icon-arrow, list-column-done-list, list-column-simple-vertical-arrow, list-column-vertical-icon-arrow, list-grid-badge-card, list-grid-candy-card-lite, list-grid-ribbon-card, list-sector-plain-text, list-waterfall-badge-card, list-waterfall-compact-card, list-zigzag-down-compact-card, list-zigzag-down-simple, list-zigzag-up-compact-card, list-zigzag-up-simple |
+| sequence (steps / phases) | sequence-ascending-stairs-3d-underline-text, sequence-ascending-steps, sequence-circular-simple, sequence-color-snake-steps-horizontal-icon-line, sequence-cylinders-3d-simple, sequence-filter-mesh-simple, sequence-funnel-simple, sequence-horizontal-zigzag-underline-text, sequence-mountain-underline-text, sequence-pyramid-simple, sequence-roadmap-vertical-plain-text, sequence-roadmap-vertical-simple, sequence-snake-steps-compact-card, sequence-snake-steps-simple, sequence-snake-steps-underline-text, sequence-stairs-front-compact-card, sequence-stairs-front-pill-badge, sequence-timeline-rounded-rect-node, sequence-timeline-simple, sequence-zigzag-pucks-3d-simple, sequence-zigzag-steps-underline-text |
+| sequence-interaction (swimlane interaction) | sequence-interaction-default-badge-card, sequence-interaction-default-animated-badge-card, sequence-interaction-default-compact-card, sequence-interaction-default-capsule-item, sequence-interaction-default-rounded-rect-node |
+| compare (comparison) | compare-binary-horizontal-badge-card-arrow, compare-binary-horizontal-simple-fold, compare-binary-horizontal-underline-text-vs, compare-hierarchy-left-right-circle-node-pill-badge, compare-quadrant-quarter-circular, compare-quadrant-quarter-simple-card, compare-swot |
+| hierarchy (tree) | hierarchy-mindmap-branch-gradient-capsule-item, hierarchy-mindmap-level-gradient-compact-card, hierarchy-structure, hierarchy-tree-curved-line-rounded-rect-node, hierarchy-tree-tech-style-badge-card, hierarchy-tree-tech-style-capsule-item |
+| chart (charts) | chart-bar-plain-text, chart-column-simple, chart-line-plain-text, chart-pie-compact-card, chart-pie-donut-pill-badge, chart-pie-donut-plain-text, chart-pie-plain-text, chart-wordcloud |
+| relation (relation flow) | relation-dagre-flow-tb-animated-badge-card, relation-dagre-flow-tb-animated-simple-circle-node, relation-dagre-flow-tb-badge-card, relation-dagre-flow-tb-simple-circle-node |
 
 ## Template selection
 
@@ -44,7 +44,7 @@ Render high-quality infographics from a simple DSL. Backed by the open-source [A
 - Main data field per template:
   - `list-*` → `lists`
   - `sequence-*` → `sequences` (optional `order asc|desc`)
-  - `sequence-interaction-*` → `sequences` (swimlanes, each with `label`, `children` nodes with `label`, optional `id`/`icon`/`step`/`desc`/`value`; same `step` = same height) + `relations` (`nodeA - 关系名 -> nodeB`)
+  - `sequence-interaction-*` → `sequences` (swimlanes, each with `label`, `children` nodes with `label`, optional `id`/`icon`/`step`/`desc`/`value`; same `step` = same height) + `relations` (`nodeA - relation label -> nodeB`)
   - `compare-binary-*` / `compare-hierarchy-left-right-*` → `compares` with EXACTLY TWO root nodes, each with `children`
   - `compare-swot` → `compares` multiple roots, optional `children`
   - `compare-quadrant-*` → `compares` exactly 4 quadrant roots
