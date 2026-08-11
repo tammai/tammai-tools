@@ -50,7 +50,10 @@ CASES = [
         "expected": {
             "TamMai.BannedWords": 2,
             "TamMai.Emoji": 1,
-            "TamMai.Fillers": 1,
+            # Two: the contracted and uncontracted "worth noting". The rule
+            # matched only the contracted form and passed "It is worth noting"
+            # clean, which is the form generated prose actually uses.
+            "TamMai.Fillers": 2,
             "TamMai.Substitutions": 1,
             "TamMaiVI.Fillers": 5,
             "TamMaiVI.Intensifiers": 1,

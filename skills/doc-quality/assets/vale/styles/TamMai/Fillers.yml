@@ -6,7 +6,12 @@ ignorecase: true
 # and offers the replacement. Listing it here too made both rules report
 # the same span twice.
 #
+# Contracted and uncontracted forms both, or the rule only catches half the
+# hits: "It's worth noting" errored while "It is worth noting" passed clean,
+# which is the form that actually shows up in generated prose. Same for
+# "whether you're" / "whether you are". Straight and curly apostrophes both.
+#
 # Single `raw` entry on purpose — Vale concatenates successive entries
 # instead of OR-ing them, so alternations must stay inline.
 raw:
-  - "\\b(it('|’)s (worth noting|important to note)|please (note|be aware)|in today('|’)s [a-z-]+ world|whether you('|’)re|let('|’)s dive|dive (in|into)|as (mentioned|noted) (above|earlier|previously))\\b"
+  - "\\b(it(?:(?:'|’)s| is) (worth noting|important to note)|please (note|be aware)|in today(?:'|’)s [a-z-]+ world|whether you(?:(?:'|’)re| are)|let(?:'|’)s dive|dive (in|into)|as (mentioned|noted) (above|earlier|previously))\\b"

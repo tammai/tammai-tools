@@ -10,9 +10,11 @@ Each rule's expected hits are noted in the comment above its block.
 
 We leverage the platform to seamlessly ship features. 🚀
 
-<!-- TamMai.Fillers x1, TamMai.Substitutions x1 -->
+<!-- TamMai.Fillers x2, TamMai.Substitutions x1 -->
 
 It's worth noting that you should utilize the API.
+
+It is worth noting that the uncontracted form must fire too.
 
 <!-- TamMaiVI.Fillers: line-start "Việc" -->
 
