@@ -1,0 +1,20 @@
+extends: existence
+message: "AI-slop word: '%s'. State the fact plainly instead."
+level: error
+ignorecase: true
+tokens:
+  - delve
+  - leverage(?:s|d|ing)?
+  - seamless(?:ly)?
+  - robust
+  - comprehensive
+  - crucial
+  - vital
+  - streamlin(?:e|es|ed|ing)
+  - empower(?:s|ed|ing)?
+  - unlock(?:s|ed|ing)?
+  - elevate(?:s|d)?
+  - game-changer
+  - cutting-edge
+  - state-of-the-art
+  - powerful

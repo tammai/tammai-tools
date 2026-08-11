@@ -1,0 +1,14 @@
+extends: existence
+message: "Marketing intensifier: '%s'. Docs state facts; delete or quantify."
+level: warning
+ignorecase: true
+raw:
+  - "vô cùng"
+  - "hết sức"
+  - "cực kỳ"
+  - "tuyệt vời"
+  - "mạnh mẽ"
+  - "toàn diện"
+  - "liền mạch"
+  - "đột phá"
+  - "tối ưu nhất"

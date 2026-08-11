@@ -1,0 +1,15 @@
+extends: existence
+message: "Vietnamese filler: '%s'. State the fact directly."
+level: error
+ignorecase: true
+raw:
+  - "(?m)^(?:[-*+]\\s+|#+\\s+)?[Vv]iệc\\s"
+  - "nhằm mục đích"
+  - "một cách (?:nhanh chóng|dễ dàng|hiệu quả|đơn giản|tốt nhất)"
+  - "trong thời đại (?:số|công nghệ)"
+  - "không thể phủ nhận"
+  - "đóng (?:một )?vai trò (?:vô cùng |rất |hết sức )?quan trọng"
+  - "mang lại (?:nhiều )?(?:lợi ích|giá trị)"
+  - "chỉ với vài bước đơn giản"
+  - "giúp bạn dễ dàng"
+  - "như đã (?:đề cập|nói|trình bày) (?:ở trên|trước đó)"

@@ -1,0 +1,6 @@
+extends: existence
+message: "Filler phrase: '%s'. Delete it or say the thing directly."
+level: error
+ignorecase: true
+raw:
+  - "\\b(it('|’)s (worth noting|important to note)|please (note|be aware)|in today('|’)s [a-z-]+ world|whether you('|’)re|let('|’)s dive|dive (in|into)|in order to|as (mentioned|noted) (above|earlier|previously))\\b"
