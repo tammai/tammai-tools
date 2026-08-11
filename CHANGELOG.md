@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.10.3] — 2026-08-11
+
+### Changed
+- **`antv-infographic/SKILL.md` is now English-only.** The skill description, the "when to use" bullet, the seven template-table category glosses and the relation-syntax placeholder all carried Chinese text inherited from the upstream engine's docs. The glosses became their English equivalents and the placeholder became `nodeA - relation label -> nodeB` — it was example prose, not engine syntax, so the DSL is unchanged. One routing consequence worth knowing: the frontmatter `description` is what the marketplace matches on, so a request phrased in Chinese no longer keys this skill directly; the English triggers are unaffected. Verified repo-wide against every CJK-adjacent Unicode block — ideographs and Extension A/B, compatibility forms, radicals, kana, Bopomofo, Hangul, CJK punctuation and fullwidth forms — with zero remaining hits
+
 ## [0.10.2] — 2026-08-11
 
 ### Fixed
