@@ -1,6 +1,6 @@
 {
   "name": "tammai-tools",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "A collection of workshop, presentation and documentation tools by Tam Mai. Generate polished HTML slide decks and long-form HTML handbooks on the BigIn design system, soft flat diagrams, wireframes, mindmaps, boards and timelines, infographics via the AntV engine, export decks to print-ready PDF, and lint and tighten markdown docs in English or Vietnamese.",
   "author": {
     "name": "Tam Mai",
