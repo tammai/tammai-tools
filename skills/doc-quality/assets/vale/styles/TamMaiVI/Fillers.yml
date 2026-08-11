@@ -2,14 +2,23 @@ extends: existence
 message: "Vietnamese filler: '%s'. State the fact directly."
 level: error
 ignorecase: true
+# Vale CONCATENATES successive `raw` entries into one pattern — it does
+# not OR them. A plain list of ten phrases compiles to a regex demanding
+# all ten in sequence, which never matches and reports nothing. Each
+# continuation line therefore carries its own leading `|`.
+#
+# `raw` (not `tokens`) is required here for the anchored first branch and
+# the inline alternations. It is NOT required for diacritics: `tokens`
+# wraps patterns in ASCII `\b`, but these phrases start and end on ASCII
+# letters, so `tokens: ["nhằm mục đích"]` matches correctly (verified).
 raw:
   - "(?m)^(?:[-*+]\\s+|#+\\s+)?[Vv]iệc\\s"
-  - "nhằm mục đích"
-  - "một cách (?:nhanh chóng|dễ dàng|hiệu quả|đơn giản|tốt nhất)"
-  - "trong thời đại (?:số|công nghệ)"
-  - "không thể phủ nhận"
-  - "đóng (?:một )?vai trò (?:vô cùng |rất |hết sức )?quan trọng"
-  - "mang lại (?:nhiều )?(?:lợi ích|giá trị)"
-  - "chỉ với vài bước đơn giản"
-  - "giúp bạn dễ dàng"
-  - "như đã (?:đề cập|nói|trình bày) (?:ở trên|trước đó)"
+  - "|nhằm mục đích"
+  - "|một cách (?:nhanh chóng|dễ dàng|hiệu quả|đơn giản|tốt nhất)"
+  - "|trong thời đại (?:số|công nghệ)"
+  - "|không thể phủ nhận"
+  - "|đóng (?:một )?vai trò (?:vô cùng |rất |hết sức )?quan trọng"
+  - "|mang lại (?:nhiều )?(?:lợi ích|giá trị)"
+  - "|chỉ với vài bước đơn giản"
+  - "|giúp bạn dễ dàng"
+  - "|như đã (?:đề cập|nói|trình bày) (?:ở trên|trước đó)"

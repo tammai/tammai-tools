@@ -2,5 +2,11 @@ extends: existence
 message: "Filler phrase: '%s'. Delete it or say the thing directly."
 level: error
 ignorecase: true
+# "in order to" is deliberately absent: TamMai/Substitutions.yml owns it
+# and offers the replacement. Listing it here too made both rules report
+# the same span twice.
+#
+# Single `raw` entry on purpose — Vale concatenates successive entries
+# instead of OR-ing them, so alternations must stay inline.
 raw:
-  - "\\b(it('|’)s (worth noting|important to note)|please (note|be aware)|in today('|’)s [a-z-]+ world|whether you('|’)re|let('|’)s dive|dive (in|into)|in order to|as (mentioned|noted) (above|earlier|previously))\\b"
+  - "\\b(it('|’)s (worth noting|important to note)|please (note|be aware)|in today('|’)s [a-z-]+ world|whether you('|’)re|let('|’)s dive|dive (in|into)|as (mentioned|noted) (above|earlier|previously))\\b"

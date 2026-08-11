@@ -2,13 +2,8 @@ extends: existence
 message: "Marketing intensifier: '%s'. Docs state facts; delete or quantify."
 level: warning
 ignorecase: true
+# One alternation on a single line. See TamMaiVI/Fillers.yml: Vale
+# concatenates successive `raw` entries rather than OR-ing them, so a
+# list of nine separate phrases here would never match anything.
 raw:
-  - "vô cùng"
-  - "hết sức"
-  - "cực kỳ"
-  - "tuyệt vời"
-  - "mạnh mẽ"
-  - "toàn diện"
-  - "liền mạch"
-  - "đột phá"
-  - "tối ưu nhất"
+  - "vô cùng|hết sức|cực kỳ|tuyệt vời|mạnh mẽ|toàn diện|liền mạch|đột phá|tối ưu nhất"
