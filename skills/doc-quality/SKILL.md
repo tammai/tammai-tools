@@ -106,6 +106,10 @@ to the target those scores imply:
 
 Rules:
 
+- **The percentage measures material removed from the original, not net
+  length change.** Both tables. A rewrite can cut 100% of the draft and
+  still come out longer, if what the draft lacked was substance rather
+  than brevity. Net length is not the metric and is never the target.
 - The cut is bounded by the citations. Delete only what the score cited
   as redundant or padded. If nothing is cited, nothing is cut — report
   that outcome. Never manufacture a cut to reach a number.
@@ -139,9 +143,11 @@ table to whatever slack remains.
 concreteness needs specifics added, not prose removed, and the rewrite
 may legitimately *grow* — bounded only by the character limit. Measured
 on a real draft scoring `hook 2, single idea 2, concreteness 1, voice 1`:
-the correct rewrite removed every slop phrase and still came out 10%
-longer, because what it lacked was numbers and a named failure. A quota
-would have scored that a failed pass.
+the `≤ 2` row demanded 40%+, and the correct rewrite cut **100%** of the
+draft's sentences while coming out **10% longer**, because what it lacked
+was numbers and a named failure. Both numbers are true at once, which is
+what the denominator rule above is for. A quota on net length would have
+scored that a failed pass.
 
 Calibration, not a target: unedited LLM or marketing prose usually
 loses 30–50%; a document drafted under Pass 0 usually loses under 10%.

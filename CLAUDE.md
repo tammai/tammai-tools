@@ -412,6 +412,14 @@ throat-clearing before the first claim, a low single-idea cites the digressions.
 character limit is a hard bound applied before either, since an over-limit post cannot ship at
 any score.
 
+**The percentage measures material removed, not net length change** — stated in Pass 2's rules
+because the alternative reading makes two of its own lines contradict each other. The measured
+case: a draft scoring `hook 2, single idea 2, concreteness 1, voice 1` hit the `≤ 2` row's
+40%+ demand by cutting 100% of its sentences, and still came out 10% longer. Read "cut 40%" as
+net length and those two facts look mutually exclusive, which is how a model ends up either
+refusing to add specifics or deleting substance to force a shrink — the exact failure Pass 2
+exists to prevent.
+
 **Concreteness and voice are never cut signals**, and that is the part most likely to get
 "simplified" back out. A post scoring low on concreteness needs specifics *added*. Measured on
 a real draft scoring `hook 2, single idea 2, concreteness 1, voice 1`: the correct rewrite

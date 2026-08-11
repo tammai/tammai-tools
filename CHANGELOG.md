@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.10.2] — 2026-08-11
+
+### Fixed
+- **Pass 2 never defined what its percentage was a percentage *of*.** Read as net length change, two of its own lines contradict each other: the `≤ 2` row demands a 40%+ cut while the concreteness note says the rewrite may legitimately grow. The rules now state that the figure measures **material removed from the original, not net length**, and that net length is never the target. Surfaced by re-running the social-mode test against the new table: a draft scoring `hook 2, single idea 2, concreteness 1, voice 1` hit the 40%+ demand by cutting 100% of its sentences and still came out 10% longer, because what it lacked was numbers and a named failure. Both numbers are true simultaneously; the ambiguity is what made them look exclusive. A model resolving it the wrong way would either refuse to add specifics or delete substance to force a shrink — the failure Pass 2 exists to prevent
+
 ## [0.10.1] — 2026-08-11
 
 ### Fixed
