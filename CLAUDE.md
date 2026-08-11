@@ -47,9 +47,11 @@ skills/
                                  block, extracted at generation time
   doc-quality/
     SKILL.md                   — the skill's instruction document (4-pass workflow)
-    assets/vale/               — .vale.ini + TamMai (English) / TamMaiVI styles
-    assets/rubric.md           — the LLM-judge scoring rubric
+    assets/vale/               — .vale.ini, .vale-social.ini, TamMai / TamMaiVI
+    assets/rubric.md           — the doc-mode LLM-judge rubric
+    assets/rubric-social.md    — the social-mode rubric + character limits
     assets/fixture.md          — bilingual fixture; one planted hit per rule
+    assets/fixture-social.md   — social fixture; emoji off, other rules armed
     assets/selftest.py         — asserts every rule fires (stdlib; needs vale)
 ```
 
@@ -342,8 +344,9 @@ Design decisions worth keeping in mind:
 
 ## doc-quality skill
 
-Four passes over a markdown document: drafting rules, a Vale lint as a hard gate, a
-compression rewrite, and an LLM-judge rubric. The lint targets are bilingual; every
+Four passes over a markdown document or social post: drafting rules, a Vale lint as a
+hard gate, a compression rewrite, and an LLM-judge rubric. Two modes, `doc` and `social`,
+each selecting a rubric and a Vale config. The lint targets are bilingual; every
 model-facing file here stays English.
 
 ### Every bug in the first draft of this config reported "0 errors"
@@ -375,18 +378,48 @@ another over-fires and keeps the sum intact. It also asserts no alert lands on t
 control lines. Verified to fail on both bugs above when reintroduced. Run it after touching
 anything under `assets/vale/`.
 
-### Pass 2's ~40% cut is a quota, and quotas fight dense documents
+### Pass 2 is sized by measurement because a quota on a ratio always "succeeds"
 
-Smoke-tested on this repo's `README.md`: Pass 1 clean, judge scores `redundancy 4, coherence
-4, density 4, tone 5`, and the only genuine redundancy was four spans totalling ~3% of the
-words. Hitting 40% there would have meant deleting fact tables. SKILL.md still states the
-figure unconditionally for pre-existing documents; until that changes, treat a document that
-resists the cut as evidence about the document, not a failure of the pass. Pass 0's
-`README ≤ 150 lines` budget has the same shape — this README is a justified 170.
+The original Pass 2 said "cut ~40% of words". The failure mode is not that the model refuses
+— it is that the model **complies**. Once genuine redundancy runs out, the next 30% has to
+come from substance, and the output still reports success, because the target was a ratio and
+the ratio was met. It also contradicted `rubric.md` step 3, which says to rewrite *only the
+cited lines*.
 
-The open recommendation, deliberately not applied: make the quota conditional on the judge's
-redundancy score instead of unconditional, so Pass 2 cuts what is actually redundant rather
-than a fixed fraction.
+Found by smoke-testing this repo's `README.md`: Pass 1 clean, judge scores `redundancy 4,
+coherence 4, density 4, tone 5`, and the only genuine redundancy was four spans totalling ~3%
+of the words. Hitting 40% there meant deleting fact tables.
+
+Pass 2 now scores first and derives the target from the score (5 → no cut, 4 → cited spans
+only, 3 → ~25%, ≤2 → 40%+), with the cut **bounded by the citations**: nothing cited, nothing
+cut. The percentages are calibration, not targets. Two properties are what make it work, and
+both are easy to erode:
+
+- **The bound is the citation list, not the number.** Re-adding "aim for X%" anywhere in that
+  pass restores the original bug regardless of what the table says.
+- **A document that resists the cut is evidence about the document.** Pass 0's
+  `README ≤ 150 lines` budget has the same shape — this README is a justified 170.
+
+`social` mode inverts the precedence: the platform character limit is a hard bound and is
+applied before the table, since an over-limit post cannot ship at any score.
+
+### The two rubrics disagree on purpose
+
+`rubric.md` scores rhetorical questions and rule-of-three as tone=1, and the `doc` Vale config
+bans emoji at **error** level — the Pass 1 hard gate. Run a LinkedIn post through `doc` mode
+and it fails on devices that are legitimate there, which is the whole reason `social` mode
+exists rather than a "relaxed docs" flag. `rubric-social.md` scores hook / single idea /
+concreteness / voice instead, and names emoji, rhetorical questions, fragments and
+rule-of-three as *deliberately not penalised* — scored under Voice only when they read as
+generated rather than chosen. Slop words stay banned in both; AI slop is worse on LinkedIn
+than in a README, not better.
+
+`.vale-social.ini` differs from `.vale.ini` by exactly one line, `TamMai.Emoji = NO`. **Vale
+ignores an unrecognised key silently**, so a typo leaves the rule armed and the mode quietly
+broken. `selftest.py` asserts zero emoji hits *and* that `TamMai.BannedWords` and
+`TamMaiVI.Intensifiers` still fire in the same run — the second half is the load-bearing one,
+since a wholly broken config also scores zero emoji. Verified: typo the key and the test
+reports emoji armed; break the config outright and it reports the other rules dead.
 
 ### Rule overlap double-reports
 

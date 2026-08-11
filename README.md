@@ -133,24 +133,26 @@ Renders data-storytelling infographics — stats, steps, comparisons, SWOT, quad
 
 ### `doc-quality`
 
-Enforces documentation quality on any markdown, English or Vietnamese, in three passes: deterministic lint, compression, and an LLM-judge rubric.
+Enforces quality on any markdown, English or Vietnamese, in four passes: drafting rules, a deterministic lint, a measured compression, and an LLM-judge rubric. Two modes — `doc` and `social` — each with its own rubric and Vale config.
 
 **Trigger phrases**
 
 - "Lint this README"
 - "Tighten this guide, it reads like AI slop"
-- "Review the doc before I ship it"
+- "Clean up this LinkedIn post before I publish"
 
 **Output** — the edited document, plus one line of judge scores.
 
 | Pass | Detail |
 |---|---|
-| 0 — Drafting rules | Applied while writing, not after: one idea in one place, no preamble, no summary that repeats the body, length budgets |
+| 0 — Drafting rules | Applied while writing, not after: one idea in one place, no preamble, no summary that repeats the body, length budgets. Three rules invert in `social` mode |
 | 1 — Lint (hard gate) | [Vale](https://vale.sh) with two bundled styles — `TamMai` (English slop words, filler phrases, substitutions, emoji) and `TamMaiVI` (Vietnamese fillers, marketing intensifiers). Both run on every file; the patterns are language-disjoint, so no path scoping |
-| 2 — Compression | One global rewrite against whatever redundancy Pass 1 left |
-| 3 — Judge (soft gate) | Scores redundancy, coherence, density and tone 1–5 against `assets/rubric.md`; any dimension below 4 is rewritten and re-scored once |
+| 2 — Compression | The cut is sized by measurement, not a quota: score redundancy and density first, then cut only the spans those scores cited. A document scoring 5 is shipped unchanged |
+| 3 — Judge (soft gate) | `doc` scores redundancy, coherence, density and tone; `social` scores hook, single idea, concreteness and voice against a platform character limit. Any dimension below 4 is rewritten and re-scored once |
 
-**Requires** Vale on `PATH` — `brew install vale`. Without it, Pass 1 degrades to a manual checklist and says so. `assets/selftest.py` asserts every rule still fires against `assets/fixture.md`; run it after touching the config, because a broken Vale config reports zero findings and looks exactly like a clean document.
+`social` mode exists because the two rubrics disagree by design: `rubric.md` scores rhetorical questions and rule-of-three as tone=1 and the `doc` Vale config bans emoji at error level, so a post linted as a document fails the hard gate on devices that are legitimate there. Slop words stay banned in both.
+
+**Requires** Vale on `PATH` — `brew install vale`. Without it, Pass 1 degrades to a manual checklist and says so. `assets/selftest.py` runs before Pass 1 and asserts every rule still fires against the two bundled fixtures, because a broken Vale config reports zero findings and looks exactly like a clean document.
 
 ## Repository structure
 
@@ -191,9 +193,11 @@ skills/
   doc-quality/
     SKILL.md                        — skill instructions (3-pass doc quality workflow)
     assets/
-      vale/                         — .vale.ini + TamMai (English) and TamMaiVI styles
-      rubric.md                     — the LLM-judge scoring rubric
+      vale/                         — .vale.ini, .vale-social.ini, TamMai + TamMaiVI styles
+      rubric.md                     — the doc-mode LLM-judge rubric
+      rubric-social.md              — the social-mode rubric + platform character limits
       fixture.md                    — bilingual fixture; every rule has a planted hit
+      fixture-social.md             — social fixture; emoji off, every other rule armed
       selftest.py                   — asserts each rule fires (stdlib; needs vale on PATH)
 ```
 
