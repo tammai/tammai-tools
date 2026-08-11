@@ -53,6 +53,9 @@ skills/
     assets/fixture.md          — bilingual fixture; one planted hit per rule
     assets/fixture-social.md   — social fixture; emoji off, other rules armed
     assets/selftest.py         — asserts every rule fires (stdlib; needs vale)
+scripts/
+  check-skill-metadata.py      — asserts every SKILL.md frontmatter will install
+                                 (stdlib; folds YAML block scalars itself)
 ```
 
 Skills are discovered automatically from the `skills/` directory. Each skill folder must contain a `SKILL.md` with YAML frontmatter (`name` and `description`). There is no `triggers` key — trigger phrases go in the `description` prose, which is what the marketplace routes on.
@@ -461,6 +464,14 @@ for whenever a phrase is added to either file.
 Not a lint warning — the plugin fails to install. Two descriptions were over when this was
 found (`soft-visuals` at 1287, `workshop-handbook` at 1147) and nothing in the repo measured
 them, so the only symptom was a failed install with the skill unnamed.
+
+`scripts/check-skill-metadata.py` measures it now. Run it before tagging a release. It exits
+1 on an over-length description, a `name` that does not match its directory, a missing
+`description` and missing frontmatter, and **warns** within 64 chars of the ceiling — one
+trigger phrase is about that long, so a passing file that close is a latent failure.
+`soft-visuals` and `workshop-handbook` currently sit at 28 and 18, and warn every run.
+Verified by restoring the real v0.10.3 descriptions: it reports them at exactly 1287 and 1147
+and exits 1.
 
 The limit applies to the **folded** value, not the raw block. These are `>` block scalars, so
 YAML joins the lines with single spaces and drops the 2-space indents — measuring the raw
