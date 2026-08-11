@@ -65,7 +65,7 @@ Before generating, ensure you have:
 
 | Field | Required | Notes |
 |---|---|---|
-| Handbook title | ✅ | e.g. "Docker for Backend Devs" |
+| Handbook title | Yes | e.g. "Docker for Backend Devs" |
 | Subtitle / lede | Optional | One sentence on who it is for and what they will be able to do |
 | Chapter outline or content | Optional | If absent, generate a sensible outline for the topic |
 | Footer info for the cover | Optional | e.g. "BigIn · 2026" |

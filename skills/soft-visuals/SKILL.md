@@ -46,9 +46,9 @@ If the request spans two (e.g. "show the architecture and the deploy flow"), pro
 
 | Field | Required | Notes |
 |---|---|---|
-| Visual type | ✅ | Infer it; only ask if genuinely ambiguous |
-| Title | ✅ | Goes in the header |
-| Nodes / screens / branches / rows | ✅ | If the user gave prose, extract the entities yourself |
+| Visual type | Yes | Infer it; only ask if genuinely ambiguous |
+| Title | Yes | Goes in the header |
+| Nodes / screens / branches / rows | Yes | If the user gave prose, extract the entities yourself |
 | The one thing to emphasise | Optional | Becomes the single accent-coloured element |
 
 If the user gave only a topic, build something sensible and complete rather than asking a

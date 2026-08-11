@@ -114,10 +114,34 @@ Rules:
 - One idea in one place; replace restatements with links.
 - Prefer one example over three; a table over parallel prose.
 
-In `social` mode the platform limit is the hard bound and takes
-precedence over the table: cut to fit first, then apply the table to
-whatever slack remains. A post already under the limit and scoring 4+
-needs no cut.
+### In `social` mode
+
+`rubric-social.md` scores neither redundancy nor density, so the table
+above has no input. Use the social dimensions that measure the same
+thing — text not earning its place:
+
+| Lower of hook / single idea | Cut |
+|---|---|
+| 5 | none — the character limit is the only bound |
+| 4 | the cited spans only |
+| 3 | ~25% |
+| ≤ 2 | 40%+ |
+
+A low **hook** score cites throat-clearing before the first claim; a low
+**single idea** score cites the digressions. Both are cuttable, and both
+name the spans to cut.
+
+The platform character limit is a hard bound applied FIRST — an
+over-limit post cannot ship at any score. Cut to fit, then apply the
+table to whatever slack remains.
+
+**Concreteness and voice are never cut signals.** A post scoring low on
+concreteness needs specifics added, not prose removed, and the rewrite
+may legitimately *grow* — bounded only by the character limit. Measured
+on a real draft scoring `hook 2, single idea 2, concreteness 1, voice 1`:
+the correct rewrite removed every slop phrase and still came out 10%
+longer, because what it lacked was numbers and a named failure. A quota
+would have scored that a failed pass.
 
 Calibration, not a target: unedited LLM or marketing prose usually
 loses 30–50%; a document drafted under Pass 0 usually loses under 10%.

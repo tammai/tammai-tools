@@ -378,6 +378,11 @@ another over-fires and keeps the sum intact. It also asserts no alert lands on t
 control lines. Verified to fail on both bugs above when reintroduced. Run it after touching
 anything under `assets/vale/`.
 
+**A repo-wide lint will always report the fixtures.** `fixture.md` and `fixture-social.md`
+carry planted violations by design, so `vale skills/doc-quality/assets/*.md` reports 14 errors
+on a healthy repo. Lint `rubric*.md` explicitly rather than globbing the directory, or the
+fixtures read as regressions.
+
 ### Pass 2 is sized by measurement because a quota on a ratio always "succeeds"
 
 The original Pass 2 said "cut ~40% of words". The failure mode is not that the model refuses
@@ -400,8 +405,18 @@ both are easy to erode:
 - **A document that resists the cut is evidence about the document.** Pass 0's
   `README ≤ 150 lines` budget has the same shape — this README is a justified 170.
 
-`social` mode inverts the precedence: the platform character limit is a hard bound and is
-applied before the table, since an over-limit post cannot ship at any score.
+`social` mode needs its own table, because `rubric-social.md` scores neither redundancy nor
+density — the doc table has no input there. It keys on **hook** and **single idea** instead,
+the two social dimensions that measure text not earning its place: a low hook cites
+throat-clearing before the first claim, a low single-idea cites the digressions. The platform
+character limit is a hard bound applied before either, since an over-limit post cannot ship at
+any score.
+
+**Concreteness and voice are never cut signals**, and that is the part most likely to get
+"simplified" back out. A post scoring low on concreteness needs specifics *added*. Measured on
+a real draft scoring `hook 2, single idea 2, concreteness 1, voice 1`: the correct rewrite
+stripped every slop phrase and still came out 10% longer, because what it lacked was numbers
+and a named failure. Under the old quota that is a failed pass; it is the right answer.
 
 ### The two rubrics disagree on purpose
 

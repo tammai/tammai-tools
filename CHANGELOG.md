@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.10.1] — 2026-08-11
+
+### Fixed
+- **The repo now passes its own linter.** Five `TamMai.Emoji` errors — a `✅` marking the Required column in the input tables of `workshop-slides`, `workshop-handbook` and `soft-visuals` — are now the word `Yes`. Same meaning, and the emoji rule was correct to fire: these are technical instruction documents
+- **`social` mode's Pass 2 had no input.** The compression table keys on redundancy and information density, and `rubric-social.md` scores neither — so in `social` mode nothing sized the cut and the table was inert. Pass 2 now carries a social table keyed on **hook** and **single idea**, the two social dimensions that measure text not earning its place: a low hook cites the throat-clearing before the first claim, a low single-idea cites the digressions, and both name the spans to cut. The platform character limit stays a hard bound applied before either
+- **Concreteness and voice are named as never being cut signals.** A post scoring low on concreteness needs specifics *added*, not prose removed. Measured on a real draft scoring `hook 2, single idea 2, concreteness 1, voice 1`: the correct rewrite stripped all 15 slop findings and still came out 10% longer, because what it lacked was numbers and a named failure. The old quota would have scored that a failed pass
+
+### Changed
+- `CLAUDE.md` records that a repo-wide lint always reports the two fixtures — they carry planted violations by design, so globbing `assets/*.md` reports 14 errors on a healthy repo. Lint `rubric*.md` explicitly instead, or the fixtures read as regressions
+
 ## [0.10.0] — 2026-08-11
 
 ### Added

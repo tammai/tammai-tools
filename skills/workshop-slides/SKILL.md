@@ -53,7 +53,7 @@ Before generating, ensure you have:
 
 | Field | Required | Notes |
 |---|---|---|
-| Workshop / presentation title | ✅ | e.g. "Intro to Docker" |
+| Workshop / presentation title | Yes | e.g. "Intro to Docker" |
 | Subtitle | Optional | e.g. "A hands-on session for backend devs" |
 | Slide outline or content | Optional | If absent, generate a sensible default for the topic |
 | Footer info for cover | Optional | e.g. "BigIn · 2026" |

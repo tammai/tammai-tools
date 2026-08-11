@@ -147,7 +147,7 @@ Enforces quality on any markdown, English or Vietnamese, in four passes: draftin
 |---|---|
 | 0 — Drafting rules | Applied while writing, not after: one idea in one place, no preamble, no summary that repeats the body, length budgets. Three rules invert in `social` mode |
 | 1 — Lint (hard gate) | [Vale](https://vale.sh) with two bundled styles — `TamMai` (English slop words, filler phrases, substitutions, emoji) and `TamMaiVI` (Vietnamese fillers, marketing intensifiers). Both run on every file; the patterns are language-disjoint, so no path scoping |
-| 2 — Compression | The cut is sized by measurement, not a quota: score redundancy and density first, then cut only the spans those scores cited. A document scoring 5 is shipped unchanged |
+| 2 — Compression | The cut is sized by measurement, not a quota: score first, then cut only the spans those scores cited — redundancy and density in `doc` mode, hook and single idea in `social`. A document scoring 5 is shipped unchanged, and a post short on concreteness may legitimately grow |
 | 3 — Judge (soft gate) | `doc` scores redundancy, coherence, density and tone; `social` scores hook, single idea, concreteness and voice against a platform character limit. Any dimension below 4 is rewritten and re-scored once |
 
 `social` mode exists because the two rubrics disagree by design: `rubric.md` scores rhetorical questions and rule-of-three as tone=1 and the `doc` Vale config bans emoji at error level, so a post linted as a document fails the hard gate on devices that are legitimate there. Slop words stay banned in both.
