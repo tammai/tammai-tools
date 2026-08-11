@@ -455,3 +455,25 @@ for whenever a phrase is added to either file.
 1. Create `skills/<skill-name>/SKILL.md` with the required YAML frontmatter.
 2. Add any static assets under `skills/<skill-name>/assets/`.
 3. Reference assets by relative path from `SKILL.md` (e.g. `assets/template.html`).
+
+### `description` has a hard 1024-character limit, and blowing it blocks the install
+
+Not a lint warning — the plugin fails to install. Two descriptions were over when this was
+found (`soft-visuals` at 1287, `workshop-handbook` at 1147) and nothing in the repo measured
+them, so the only symptom was a failed install with the skill unnamed.
+
+The limit applies to the **folded** value, not the raw block. These are `>` block scalars, so
+YAML joins the lines with single spaces and drops the 2-space indents — measuring the raw
+frontmatter text overcounts by roughly 2 chars per line and can report a passing description
+as failing. Fold before counting.
+
+What to cut, in order: **visual and implementation detail** (`soft-visuals` was spending ~105
+chars on stroke weights and connector style, which the body already covers), then **trigger
+phrases that duplicate each other** (`"diagram this"` next to `"draw a diagram"`, `"playbook"`
+in both the noun list and the trigger list). What to keep: the trigger phrase list is what the
+marketplace routes on, and so is any **negative** rule — `soft-visuals`' "Do NOT use for data
+charts" is what keeps charting requests off it.
+
+Trimming `workshop-handbook` also turned up a description claiming **"auto-numbered chapters
+and sections"**, which v0.7.0 removed. A description is documentation that nothing renders, so
+it goes stale invisibly — reread it whenever the skill's behaviour changes.

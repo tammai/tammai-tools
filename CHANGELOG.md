@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.10.4] — 2026-08-11
+
+### Fixed
+- **Two skill descriptions exceeded the 1024-character limit, which blocks the plugin install.** `soft-visuals` was 1287 and `workshop-handbook` 1147; both are now 996 and 1006. The limit applies to the folded YAML value, not the raw block — these are `>` scalars, so measuring the indented source overcounts by ~2 chars per line. Trimmed the visual and implementation detail the body already covers (stroke weights, connector style, the brand-preset breakdown) and the trigger phrases that duplicated each other, keeping the full trigger vocabulary and `soft-visuals`' "Do NOT use for data charts" exclusion, since both are what the marketplace routes on
+- **`workshop-handbook`'s description advertised "auto-numbered chapters and sections"**, which v0.7.0 removed when it dropped numbering entirely. Nothing renders a description, so the claim went stale invisibly for three minor versions
+
 ## [0.10.3] — 2026-08-11
 
 ### Changed

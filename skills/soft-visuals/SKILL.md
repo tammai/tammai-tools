@@ -2,20 +2,17 @@
 name: soft-visuals
 description: >
   Generates soft, flat, pastel visuals — the Whimsical-style look — as self-contained
-  inline SVG: flowcharts, architecture diagrams, wireframes (desktop and mobile), mindmaps,
-  org charts, sequence diagrams, Gantt timelines, kanban boards, and user journey maps.
-  Rounded cards with translucent hue fills, one even stroke weight, rounded elbow
-  connectors, no shadows. Output is a single .html file with a built-in dark/light toggle,
-  and every <svg> can be pasted straight into a workshop-slides deck. Use this skill
+  inline SVG: flowcharts, architecture diagrams, wireframes, mindmaps, org charts,
+  sequence diagrams, Gantt timelines, kanban boards, and user journey maps. Output is one
+  .html file; every <svg> pastes straight into a workshop-slides deck. Use this skill
   whenever the user wants to draw, diagram, map, mock up, chart, or visualise something.
-  Triggers on phrases like "draw a diagram", "diagram this", "make a flowchart", "chart
-  this flow", "architecture diagram", "system diagram", "visualise this", "wireframe
-  this", "mock up a screen", "UI mockup", "mindmap", "mind map this", "org chart", "team
-  structure", "sequence diagram", "show the request flow", "timeline", "gantt chart",
-  "roadmap view", "kanban board", "user journey map", "whimsical style diagram", "sketch
-  the flow". Also trigger proactively when a user is explaining a system, flow, hierarchy,
-  schedule, or screen layout and a picture would carry it better than prose. Do NOT use
-  for data charts — bar/line/pie charts of a dataset are a charting job, not this skill.
+  Triggers on phrases like "draw a diagram", "make a flowchart", "architecture diagram",
+  "visualise this", "wireframe this", "mock up a screen", "UI mockup", "mindmap", "org
+  chart", "team structure", "sequence diagram", "show the request flow", "timeline",
+  "gantt chart", "roadmap view", "kanban board", "user journey map". Also trigger
+  proactively when a user is explaining a system, flow, hierarchy, schedule, or screen
+  layout and a picture would carry it better than prose. Do NOT use for data charts —
+  bar/line/pie charts of a dataset are a charting job, not this skill.
 ---
 
 # Soft Visuals

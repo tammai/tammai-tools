@@ -2,15 +2,14 @@
 name: workshop-handbook
 description: >
   Generates a complete, self-contained HTML handbook — a single long-form page with a sidebar of
-  bookmarks, auto-numbered chapters and sections, deep links, dark/light mode and a print stylesheet.
-  Detailed reference reading, the written companion to a slide deck. Fully brandable: accent color,
-  background, fonts and watermark logo all come from the same preset the workshop-slides skill uses.
-  Defaults to the BigIn design system (dark slate + orange, Google Sans). Use this skill whenever the
+  bookmarks, deep links, dark/light mode and a print stylesheet. Detailed reference reading, the
+  written companion to a slide deck. Brandable from the same preset the workshop-slides skill uses;
+  defaults to the BigIn design system (dark slate + orange, Google Sans). Use this skill whenever the
   user wants a handbook, manual, guide, playbook, workbook, participant notes, leave-behind, onboarding
   doc, runbook or written reference — even if they only provide a topic and no content. Triggers on
   phrases like "write a handbook for X", "make a guide about X", "workshop handbook", "participant
-  notes", "training manual", "onboarding guide", "playbook", "leave-behind document", "a long-form
-  version of these slides", "something people can read afterwards". Also trigger proactively right
+  notes", "training manual", "onboarding guide", "a long-form version of these slides", "something
+  people can read afterwards". Also trigger proactively right
   after generating a deck with workshop-slides if the user mentions handing something out, emailing
   notes, or people needing the detail that would not fit on a slide.
 ---
