@@ -9,7 +9,7 @@
     {
       "name": "tammai-tools",
       "source": "./",
-      "description": "A collection of workshop and presentation tools by Tam Mai. Generate polished HTML slide decks and long-form HTML handbooks on the BigIn design system, soft flat diagrams, wireframes, mindmaps, boards and timelines, and export decks to print-ready PDF.",
+      "description": "A collection of workshop, presentation and documentation tools by Tam Mai. Generate polished HTML slide decks and long-form HTML handbooks on the BigIn design system, soft flat diagrams, wireframes, mindmaps, boards and timelines, infographics via the AntV engine, export decks to print-ready PDF, and lint and tighten markdown docs in English or Vietnamese.",
       "author": {
         "name": "Tam Mai",
         "email": "tam.mai@bigin.vn"
@@ -43,7 +43,14 @@
         "timeline",
         "roadmap",
         "kanban",
-        "user-journey"
+        "user-journey",
+        "infographic",
+        "linting",
+        "vale",
+        "prose-linter",
+        "markdown",
+        "doc-quality",
+        "vietnamese"
       ]
     }
   ]

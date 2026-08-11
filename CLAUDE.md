@@ -45,9 +45,15 @@ skills/
                                  (title/desc header, dark/light toggle, SVG
                                  export button) lives inline in the template
                                  block, extracted at generation time
+  doc-quality/
+    SKILL.md                   — the skill's instruction document (4-pass workflow)
+    assets/vale/               — .vale.ini + TamMai (English) / TamMaiVI styles
+    assets/rubric.md           — the LLM-judge scoring rubric
+    assets/fixture.md          — bilingual fixture; one planted hit per rule
+    assets/selftest.py         — asserts every rule fires (stdlib; needs vale)
 ```
 
-Skills are discovered automatically from the `skills/` directory. Each skill folder must contain a `SKILL.md` with YAML frontmatter (`name`, `description`, `triggers`).
+Skills are discovered automatically from the `skills/` directory. Each skill folder must contain a `SKILL.md` with YAML frontmatter (`name` and `description`). There is no `triggers` key — trigger phrases go in the `description` prose, which is what the marketplace routes on.
 
 ## workshop-slides skill
 
@@ -333,6 +339,60 @@ Design decisions worth keeping in mind:
 - **Dark/light re-renders, not re-styles.** The infographic itself is a canvas re-rendered from the DSL with `theme.type dark|light` injected (or swapped in place — the toggle's regex must keep the `type` line's leading indentation: use `[ \t]*`, never `\s*`, or the line loses its indent and `palette` gets eaten).
 - **Exported SVG gets a sans-serif fallback.** AntV puts text in `<foreignObject>` divs plus a `font-family` on the root `<svg>`; the export post-processes the serialized SVG with `applyFontFallback()`, which rewrites every `Google Sans` reference (attribute, inline style, root) to a full `'Google Sans', system-ui, …, sans-serif` chain. Without this, a standalone SVG whose webfont fails renders in default serif.
 - **`{title}`/`{desc}` placeholders** feed both the page `<title>` and the `<h1>`/`.lede` header; `{syntax}` is the DSL, `{slug}` the filename stem.
+
+## doc-quality skill
+
+Four passes over a markdown document: drafting rules, a Vale lint as a hard gate, a
+compression rewrite, and an LLM-judge rubric. The lint targets are bilingual; every
+model-facing file here stays English.
+
+### Every bug in the first draft of this config reported "0 errors"
+
+That is the thing to internalise before touching `assets/vale/`. A broken Vale config and
+a clean document produce byte-identical output, so the config cannot be verified by
+running it on real docs and seeing no complaints — which is exactly how it shipped with
+two fatal bugs and one false rationale.
+
+- **`TokenIgnores` matched the whole document.** The value was `` `[^`]+` `` — backticks
+  intended as delimiters. Vale's INI parser strips them, leaving `[^`]+`, which matches
+  every run of non-backtick characters. Every rule was silenced. Measured on the fixture:
+  0 findings with it, 5 with `BlockIgnores` alone, 11 with neither.
+- **Both directives were redundant anyway.** Vale's default markdown scoping already skips
+  fenced blocks and inline code — verified against planted violations in both. `fixture.md`
+  keeps that control section so the property stays asserted rather than assumed.
+- **Vale concatenates `raw` entries; it does not OR them.** `raw: ["alpha", "beta"]` matches
+  only `alphabeta`. Both `TamMaiVI` files listed 9–10 phrases as separate entries and so
+  compiled into a regex demanding all of them in sequence — neither had ever matched
+  anything. Continuation lines now carry a leading `|`. The English styles were unaffected
+  only because they happen to have one `raw` entry each, which is luck, not design.
+- **`tokens` handles Vietnamese diacritics fine.** The original rationale for `raw` was that
+  Vale wraps `tokens` in ASCII `\b`. True, but these phrases begin and end on ASCII letters,
+  so `tokens: ["nhằm mục đích"]` matches. `raw` is still needed — for the anchored
+  `^…Việc` branch and the inline alternations — just not for that reason.
+
+`assets/selftest.py` asserts **per-rule** counts, not a total: one rule can go dead while
+another over-fires and keeps the sum intact. It also asserts no alert lands on the two clean
+control lines. Verified to fail on both bugs above when reintroduced. Run it after touching
+anything under `assets/vale/`.
+
+### Pass 2's ~40% cut is a quota, and quotas fight dense documents
+
+Smoke-tested on this repo's `README.md`: Pass 1 clean, judge scores `redundancy 4, coherence
+4, density 4, tone 5`, and the only genuine redundancy was four spans totalling ~3% of the
+words. Hitting 40% there would have meant deleting fact tables. SKILL.md still states the
+figure unconditionally for pre-existing documents; until that changes, treat a document that
+resists the cut as evidence about the document, not a failure of the pass. Pass 0's
+`README ≤ 150 lines` budget has the same shape — this README is a justified 170.
+
+The open recommendation, deliberately not applied: make the quota conditional on the judge's
+redundancy score instead of unconditional, so Pass 2 cuts what is actually redundant rather
+than a fixed fraction.
+
+### Rule overlap double-reports
+
+`in order to` was in both `TamMai/Fillers.yml` and `TamMai/Substitutions.yml`, so it reported
+the same span twice. `Substitutions` owns it, because it names the replacement. Worth checking
+for whenever a phrase is added to either file.
 
 ## Adding a new skill
 

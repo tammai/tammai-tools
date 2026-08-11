@@ -57,7 +57,7 @@ Generates a complete, self-contained HTML handbook — the long-form, read-alone
 | Branding | Shares `~/.workshop-slides-preset.json` with `workshop-slides` — configure once, both skills match |
 | PDF | Cmd-P gives a contents page, then one chapter per page, forced to a light palette |
 
-**Default brand:** same as `workshop-slides` — dark slate (`#020617`) + orange accent (`#f97316`), Google Sans, Fira Code for code.
+**Default brand:** same as `workshop-slides`.
 
 ### `slides-to-pdf`
 
@@ -68,8 +68,6 @@ Exports a generated HTML deck to a single multi-page PDF — one page per slide.
 - "Convert my slides to PDF"
 - "Export the deck as a PDF"
 - "I need a PDF version to email the team"
-
-**Output** — one PDF, one page per slide.
 
 | Property | Value |
 |---|---|
@@ -112,6 +110,48 @@ The style is **flat — no shadows**: SVG filters force Chrome's print-to-PDF to
 
 Because the `--dg-*` tokens are shared verbatim with `workshop-slides`, any generated `<svg>` pastes straight into a slide deck.
 
+### `antv-infographic`
+
+Renders data-storytelling infographics — stats, steps, comparisons, SWOT, quadrants, org trees, charts, wordclouds — through the open-source [AntV Infographic](https://github.com/antvis) engine (~54 templates) rather than hand-drawn SVG.
+
+**Trigger phrases**
+
+- "Make an infographic of these Q3 numbers"
+- "Turn this into a SWOT graphic"
+- "Chart the funnel as an infographic"
+
+**Output** — a single `.html` file with a dark/light toggle and an SVG export button.
+
+| Property | Detail |
+|---|---|
+| Engine | AntV Infographic, MIT-licensed, driven by a compact DSL |
+| Theming | Dark/light re-renders the canvas from the DSL rather than restyling it |
+| SVG export | Post-processed to a full sans-serif fallback chain, so a standalone file survives a failed webfont |
+| Shell | Same header and button vocabulary as `soft-visuals` |
+
+`soft-visuals` delegates here automatically when a request is data storytelling rather than a diagram.
+
+### `doc-quality`
+
+Enforces documentation quality on any markdown, English or Vietnamese, in three passes: deterministic lint, compression, and an LLM-judge rubric.
+
+**Trigger phrases**
+
+- "Lint this README"
+- "Tighten this guide, it reads like AI slop"
+- "Review the doc before I ship it"
+
+**Output** — the edited document, plus one line of judge scores.
+
+| Pass | Detail |
+|---|---|
+| 0 — Drafting rules | Applied while writing, not after: one idea in one place, no preamble, no summary that repeats the body, length budgets |
+| 1 — Lint (hard gate) | [Vale](https://vale.sh) with two bundled styles — `TamMai` (English slop words, filler phrases, substitutions, emoji) and `TamMaiVI` (Vietnamese fillers, marketing intensifiers). Both run on every file; the patterns are language-disjoint, so no path scoping |
+| 2 — Compression | One global rewrite against whatever redundancy Pass 1 left |
+| 3 — Judge (soft gate) | Scores redundancy, coherence, density and tone 1–5 against `assets/rubric.md`; any dimension below 4 is rewritten and re-scored once |
+
+**Requires** Vale on `PATH` — `brew install vale`. Without it, Pass 1 degrades to a manual checklist and says so. `assets/selftest.py` asserts every rule still fires against `assets/fixture.md`; run it after touching the config, because a broken Vale config reports zero findings and looks exactly like a clean document.
+
 ## Repository structure
 
 ```
@@ -122,6 +162,7 @@ skills/
     SKILL.md                        — skill instructions (Claude reads this at invocation)
     assets/
       template.html                 — base HTML template for generated decks
+      build.py                      — assembler: template + slide fragment → deck
       favicon.ico                   — browser tab icon
     demo.html                       — 15-slide reference deck; every slide is
                                       labelled with the components it demonstrates
@@ -144,9 +185,19 @@ skills/
       gallery.html                  — reference: every shape, connector and layout
     demo.html                       — worked example: all nine visual types on one
                                       product, each captioned with its prompt
+  antv-infographic/
+    SKILL.md                        — skill instructions; the HTML shell lives inline
+                                      in its template block, extracted at generation time
+  doc-quality/
+    SKILL.md                        — skill instructions (3-pass doc quality workflow)
+    assets/
+      vale/                         — .vale.ini + TamMai (English) and TamMaiVI styles
+      rubric.md                     — the LLM-judge scoring rubric
+      fixture.md                    — bilingual fixture; every rule has a planted hit
+      selftest.py                   — asserts each rule fires (stdlib; needs vale on PATH)
 ```
 
-Skills are discovered automatically from the `skills/` directory. Each skill folder must contain a `SKILL.md` with YAML frontmatter (`name`, `description`, `triggers`).
+Skills are discovered automatically from the `skills/` directory.
 
 ## Installation
 
@@ -159,9 +210,9 @@ claude plugin install tammai-tools
 
 ## Adding a new skill
 
-1. Create `skills/<skill-name>/SKILL.md` with the required YAML frontmatter.
-2. Add any static assets under `skills/<skill-name>/assets/`.
-3. Reference assets by relative path from `SKILL.md` (e.g. `assets/template.html`).
+1. Create `skills/<skill-name>/SKILL.md` with YAML frontmatter (`name`, `description`).
+2. Add static assets under `skills/<skill-name>/assets/`.
+3. Reference them by relative path from `SKILL.md` (e.g. `assets/template.html`).
 
 See [CLAUDE.md](CLAUDE.md) for full development guidance.
 
