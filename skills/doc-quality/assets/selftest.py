@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
-"""Assert the bundled Vale config actually fires.
+"""Assert both bundled Vale configs actually fire.
 
-Run this after touching .vale.ini or any styles/**/*.yml.
+Run this before Pass 1, and after touching any .vale*.ini or styles/**/*.yml.
 
-The failure mode this exists to catch is silence. Two real bugs shipped in
-the first draft of this config, and both reported "0 errors, 0 warnings" —
+The failure mode this exists to catch is silence. Three real bugs shipped in
+the first draft of this config, and every one reported "0 errors, 0 warnings" —
 indistinguishable from a clean document:
 
-  * `TokenIgnores` with a backtick-delimited pattern lost its outer
-    backticks to Vale's INI parser and degraded into one matching every
-    run of non-backtick characters, i.e. the whole file. Every rule was
-    silenced.
-  * Vale CONCATENATES successive `raw` entries instead of OR-ing them, so
-    both TamMaiVI files compiled into a regex demanding all of their
-    phrases in sequence. Neither had ever matched anything.
+  * `TokenIgnores` with a backtick-delimited pattern lost its outer backticks
+    to Vale's INI parser and degraded into one matching every run of
+    non-backtick characters, i.e. the whole file. Every rule was silenced.
+  * Vale CONCATENATES successive `raw` entries instead of OR-ing them, so both
+    TamMaiVI files compiled into a regex demanding all of their phrases in
+    sequence. Neither had ever matched anything.
+  * `in order to` sat in both Fillers and Substitutions and double-reported.
 
-Checking a total count is not enough — a rule can go dead while another
-over-fires and keeps the sum intact. Counts are asserted per rule.
+Two properties make the assertions non-obvious:
+
+  * Counts are asserted PER RULE, not as a total. A rule can go dead while
+    another over-fires and keeps the sum intact.
+  * The social config asserts zero emoji hits AND that other rules still fire
+    in the same run. Zero-emoji alone proves nothing — Vale ignores an
+    unrecognised key like `TamMai.Emoji = NO` silently, and a wholly broken
+    config also scores zero on every rule.
 
 Exit 0 on pass, 1 on failure. Stdlib only.
 """
@@ -28,79 +34,119 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-CONFIG = HERE / "vale" / ".vale.ini"
-FIXTURE = HERE / "fixture.md"
-
-# Planted violations in fixture.md. Clean control lines and the code-scoping
-# section must contribute nothing, so the total is exactly the sum below.
-EXPECTED = {
-    "TamMai.BannedWords": 2,
-    "TamMai.Emoji": 1,
-    "TamMai.Fillers": 1,
-    "TamMai.Substitutions": 1,
-    "TamMaiVI.Fillers": 5,
-    "TamMaiVI.Intensifiers": 1,
-}
 
 # Substrings that must never appear in a Match. The first two are the clean
-# control lines; the rest live in inline code or a fenced block, which Vale's
-# default markdown scoping is supposed to skip.
+# control lines present in both fixtures; the rest live in inline code or a
+# fenced block, which Vale's default markdown scoping is supposed to skip.
 FORBIDDEN_MATCHES = ("Ubuntu", "port 8080", "--seamlessly", "utilize thing")
 
+CASES = [
+    {
+        "name": "doc",
+        "config": HERE / "vale" / ".vale.ini",
+        "fixture": HERE / "fixture.md",
+        # Planted violations. Clean control lines and the code-scoping section
+        # contribute nothing, so the total is exactly the sum below.
+        "expected": {
+            "TamMai.BannedWords": 2,
+            "TamMai.Emoji": 1,
+            "TamMai.Fillers": 1,
+            "TamMai.Substitutions": 1,
+            "TamMaiVI.Fillers": 5,
+            "TamMaiVI.Intensifiers": 1,
+        },
+    },
+    {
+        "name": "social",
+        "config": HERE / "vale" / ".vale-social.ini",
+        "fixture": HERE / "fixture-social.md",
+        # Emoji off; everything else armed. BannedWords and Intensifiers firing
+        # here is what proves the config loaded rather than collapsed.
+        "expected": {
+            "TamMai.BannedWords": 1,
+            "TamMaiVI.Intensifiers": 1,
+        },
+        # Must be absent entirely, not merely low.
+        "silenced": ["TamMai.Emoji"],
+    },
+]
 
-def main() -> int:
-    if shutil.which("vale") is None:
-        print("SKIP: vale not on PATH (brew install vale)", file=sys.stderr)
-        return 0
-    for path in (CONFIG, FIXTURE):
-        if not path.exists():
-            print(f"FAIL: missing {path}", file=sys.stderr)
-            return 1
 
+def run_vale(config: Path, fixture: Path) -> list | None:
     proc = subprocess.run(
-        ["vale", "--config", str(CONFIG), "--no-exit", "--output=JSON", str(FIXTURE)],
+        ["vale", "--config", str(config), "--no-exit", "--output=JSON", str(fixture)],
         capture_output=True,
         text=True,
     )
     try:
         report = json.loads(proc.stdout or "{}")
     except json.JSONDecodeError:
-        print(f"FAIL: vale did not emit JSON\n{proc.stdout}\n{proc.stderr}", file=sys.stderr)
-        return 1
+        print(f"  vale did not emit JSON\n{proc.stdout}\n{proc.stderr}", file=sys.stderr)
+        return None
+    return [a for alerts in report.values() for a in alerts]
 
-    alerts = [a for file_alerts in report.values() for a in file_alerts]
+
+def check(case: dict) -> list[str]:
+    for path in (case["config"], case["fixture"]):
+        if not path.exists():
+            return [f"missing {path}"]
+
+    alerts = run_vale(case["config"], case["fixture"])
+    if alerts is None:
+        return ["vale produced no parseable output"]
 
     counts: dict[str, int] = {}
     for alert in alerts:
         counts[alert["Check"]] = counts.get(alert["Check"], 0) + 1
 
     failures = []
-    for check, want in sorted(EXPECTED.items()):
-        got = counts.get(check, 0)
+    expected = case["expected"]
+    silenced = case.get("silenced", [])
+
+    for rule, want in sorted(expected.items()):
+        got = counts.get(rule, 0)
         if got != want:
             hint = "  <- rule is DEAD" if got == 0 else ""
-            failures.append(f"  {check}: expected {want}, got {got}{hint}")
+            failures.append(f"{rule}: expected {want}, got {got}{hint}")
 
-    for check in sorted(set(counts) - set(EXPECTED)):
-        failures.append(f"  {check}: unexpected rule fired {counts[check]}x")
+    for rule in silenced:
+        if counts.get(rule, 0):
+            failures.append(f"{rule}: expected 0 (switched off), got {counts[rule]}")
+
+    for rule in sorted(set(counts) - set(expected) - set(silenced)):
+        failures.append(f"{rule}: unexpected rule fired {counts[rule]}x")
 
     for alert in alerts:
         match = alert.get("Match", "")
         for needle in FORBIDDEN_MATCHES:
             if needle in match:
                 failures.append(
-                    f"  false positive on line {alert['Line']}: "
+                    f"false positive on line {alert['Line']}: "
                     f"{alert['Check']} matched {match!r}"
                 )
 
-    if failures:
-        print("FAIL: Vale config is not behaving as specified", file=sys.stderr)
-        print("\n".join(failures), file=sys.stderr)
-        return 1
+    return failures
 
-    total = sum(EXPECTED.values())
-    print(f"PASS: {len(EXPECTED)} rules fired, {total} alerts, no false positives")
-    return 0
+
+def main() -> int:
+    if shutil.which("vale") is None:
+        print("SKIP: vale not on PATH (brew install vale)", file=sys.stderr)
+        return 0
+
+    ok = True
+    for case in CASES:
+        failures = check(case)
+        if failures:
+            ok = False
+            print(f"FAIL [{case['name']}]: config is not behaving as specified", file=sys.stderr)
+            for line in failures:
+                print(f"  {line}", file=sys.stderr)
+        else:
+            rules = len(case["expected"]) + len(case.get("silenced", []))
+            total = sum(case["expected"].values())
+            print(f"PASS [{case['name']}]: {rules} rules checked, {total} alerts, no false positives")
+
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
