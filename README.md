@@ -143,12 +143,21 @@ Enforces quality on any markdown, English or Vietnamese, in four passes: draftin
 
 **Output** — the edited document, plus one line of judge scores.
 
+| Mode | Rubric | Vale config | Hard gate |
+|---|---|---|---|
+| `doc` (default) | `assets/rubric.md` | `assets/vale/.vale.ini` | Vale clean |
+| `social` | `assets/rubric-social.md` | `assets/vale/.vale-social.ini` | Vale clean + platform limit |
+
+Inferred from the artifact — README, guide, spec, playbook → `doc`; LinkedIn / X / Threads post, launch announcement → `social`.
+
 | Pass | Detail |
 |---|---|
 | 0 — Drafting rules | Applied while writing, not after: one idea in one place, no preamble, no summary that repeats the body, length budgets. Three rules invert in `social` mode |
 | 1 — Lint (hard gate) | [Vale](https://vale.sh) with two bundled styles — `TamMai` (English slop words, filler phrases, substitutions, emoji) and `TamMaiVI` (Vietnamese fillers, marketing intensifiers). Both run on every file; the patterns are language-disjoint, so no path scoping |
-| 2 — Compression | The cut is sized by measurement, not a quota: score first, then cut only the spans those scores cited — redundancy and density in `doc` mode, hook and single idea in `social`. A document scoring 5 is shipped unchanged, and a post short on concreteness may legitimately grow |
+| 2 — Compression | The cut is sized by measurement, not a quota: score first, then cut only the spans those scores cited — redundancy and density in `doc` mode, hook and single idea in `social`. The percentage measures material removed, never net length, so a rewrite can cut 100% of a draft and still come out longer. A document scoring 5 ships unchanged |
 | 3 — Judge (soft gate) | `doc` scores redundancy, coherence, density and tone; `social` scores hook, single idea, concreteness and voice against a platform character limit. Any dimension below 4 is rewritten and re-scored once |
+
+In `social` mode the character limit is a hard bound applied before anything else — LinkedIn 3000, X 280 (25 000 premium), Threads 500, Bluesky 300. Over the limit is a fail at any score.
 
 `social` mode exists because the two rubrics disagree by design: `rubric.md` scores rhetorical questions and rule-of-three as tone=1 and the `doc` Vale config bans emoji at error level, so a post linted as a document fails the hard gate on devices that are legitimate there. Slop words stay banned in both.
 
